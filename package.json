@@ -1,0 +1,24 @@
+{
+  "name": "husky-msp",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "author": "Jaroslav Khorishchenko <jaro@husky-dev.me>",
+  "license": "MIT",
+  "files": [
+    "dist/index.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "start": "ts-node ./src/index.ts"
+  },
+  "dependencies": {
+    "serialport": "12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.10.5",
+    "prettier": "3.1.1",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3"
+  }
+}
