@@ -11,6 +11,7 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_API_VERSION);
     // await msp.sendMessage(MSPCodes.MSP_BOARD_INFO);
     // await msp.sendMessage(MSPCodes.MSP_STATUS);
+    // await msp.sendMessage(MSPCodes.MSP_STATUS_EX);
     // await msp.sendMessage(MSPCodes.MSP_RC);
     // await msp.sendMessage(MSPCodes.MSP_RAW_IMU);
     // await msp.sendMessage(MSPCodes.MSP_RAW_GPS);
@@ -19,6 +20,14 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_SONAR);
     // await msp.sendMessage(MSPCodes.MSP_SERVO);
     // await msp.sendMessage(MSPCodes.MSP_MOTOR);
+    // await msp.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY);
+    // await msp.sendMessage(MSPCodes.MSP_ANALOG);
+    // await msp.sendMessage(MSPCodes.MSP_VOLTAGE_METERS);
+    // await msp.sendMessage(MSPCodes.MSP_CURRENT_METERS);
+    // await msp.sendMessage(MSPCodes.MSP_BATTERY_STATE);
+    // await msp.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG);
+    // await msp.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG);
+    // await msp.sendMessage(MSPCodes.MSP_BATTERY_CONFIG);
 
     // await msp.sendMessage(MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING);
     // await msp.sendMessage(MSPCodes.MSP2_GET_VTX_DEVICE_STATUS);

@@ -1,7 +1,8 @@
 import { SerialPort } from 'serialport';
-import { MSPCodes, parseMSPIncomeData } from './msg';
+import { parseIncomingBuff } from './msg';
 import { encodeMessageV1, encodeMessageV2 } from './utils';
 import { EventEmitter } from 'events';
+import { MSPCodes } from './codes';
 
 interface MSPPortOpts {
   path: string;
@@ -49,7 +50,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   private onData(buff: Buffer) {
-    const msg = parseMSPIncomeData(buff);
+    const msg = parseIncomingBuff(buff);
     if (msg) {
       this.emit('message', msg);
     } else {
@@ -82,4 +83,5 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 }
 
+export * from './codes';
 export * from './msg';

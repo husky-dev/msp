@@ -114,3 +114,5 @@ export const buffToDataView = (buff: Buffer) => {
 
   return { readU8, readU16, readU32, read8, read16, read32, readText, remaining, length };
 };
+
+export type BuffDataView = ReturnType<typeof buffToDataView>;
