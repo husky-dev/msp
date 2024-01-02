@@ -13,11 +13,15 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_STATUS);
     // await msp.sendMessage(MSPCodes.MSP_RC);
     // await msp.sendMessage(MSPCodes.MSP_RAW_IMU);
+    // await msp.sendMessage(MSPCodes.MSP_RAW_GPS);
+    // await msp.sendMessage(MSPCodes.MSP_COMP_GPS);
+    // await msp.sendMessage(MSPCodes.MSP_ATTITUDE);
+    // await msp.sendMessage(MSPCodes.MSP_SONAR);
+    // await msp.sendMessage(MSPCodes.MSP_SERVO);
+    // await msp.sendMessage(MSPCodes.MSP_MOTOR);
 
     // await msp.sendMessage(MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING);
     // await msp.sendMessage(MSPCodes.MSP2_GET_VTX_DEVICE_STATUS);
-    // await msp.sendMessage(MSPCodes.MSP_ALTITUDE);
-    await msp.sendMessage(MSPCodes.MSP_SONAR);
   });
 
   msp.on('disconnect', () => {

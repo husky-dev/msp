@@ -1,3 +1,5 @@
+import { buffToDataView } from './utils';
+
 export enum MSPCodes {
   MSP_API_VERSION = 1,
   MSP_FC_VARIANT = 2,
@@ -224,6 +226,8 @@ interface MSPBoardInfoMsg {
   targetName: string;
   boardName: string;
   manufacturerId: string;
+  signature: number[];
+  mcuTypeId: number;
 }
 
 /**
@@ -238,7 +242,7 @@ interface MSPStatusMsg {
   /**  The number of I2C errors that have occurred since the last MSP_STATUS message was sent.  */
   i2cError: number;
   /** Bitmask indicating active sensors: ACC=1, BARO=2, MAG=4, GPS=8, SONAR=16, etc. */
-  sensor: number;
+  activeSensors: number;
   /** Bitmask indicating active flight modes: ANGLE=1, HORIZON=2, etc. */
   mode: number;
   /**  The current profile number.  */
@@ -354,45 +358,47 @@ export type MSPMsg =
   | MSPAltitudeMsg
   | MSPSonarMsg;
 
+const SIGNATURE_LENGTH = 32;
+
 export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
   const len = buff[3];
   const code = buff[4];
-  const data = buff.slice(5, 5 + len);
+  const payload = buff.slice(5, 5 + len);
+  const data = buffToDataView(payload);
 
   // MSP_API_VERSION
   if (code === MSPCodes.MSP_API_VERSION) {
     return {
       code: MSPCodes.MSP_API_VERSION,
       name: 'MSP_API_VERSION',
-      mspProtocolVersion: data.readUInt8(0),
-      apiVersion: `${data.readUInt8(1)}.${data.readUInt8(2)}.0`,
+      mspProtocolVersion: data.readU8(),
+      apiVersion: `${data.readU8()}.${data.readU8()}.0`,
     };
   }
 
   // MSP_BOARD_INFO
   if (code === MSPCodes.MSP_BOARD_INFO) {
     // TODO: Parse board info data
-    let boardIdentifier = '';
-    let idx = 0;
+    let boardIdentifier: string = '';
     for (let i = 0; i < 4; i++) {
-      boardIdentifier += String.fromCharCode(data.readUInt8(idx++));
+      boardIdentifier += String.fromCharCode(data.readU8());
     }
-    const boardVersion = data.readUInt16LE(idx);
-    idx += 2;
-    const boardType = data.readUInt8(idx++);
-    const targetCapabilities = data.readUInt8(idx++);
-    let targetName = '';
-    for (let i = 0; i < data.readUint8(idx++); i++) {
-      targetName += String.fromCharCode(data.readUInt8(idx++));
+    const boardVersion = data.readU16();
+    const boardType = data.readU8();
+
+    const targetCapabilities = data.readU8();
+    const targetName = data.readText();
+
+    const boardName = data.readText();
+    const manufacturerId = data.readText();
+
+    const signature: number[] = [];
+    for (let i = 0; i < SIGNATURE_LENGTH; i++) {
+      signature.push(data.readU8());
     }
-    let boardName = '';
-    for (let i = 0; i < data.readUint8(idx++); i++) {
-      boardName += String.fromCharCode(data.readUInt8(idx++));
-    }
-    let manufacturerId = '';
-    for (let i = 0; i < 4; i++) {
-      manufacturerId += String.fromCharCode(data.readUInt8(idx++));
-    }
+
+    const mcuTypeId = data.readU8();
+
     return {
       code: MSPCodes.MSP_BOARD_INFO,
       name: 'MSP_BOARD_INFO',
@@ -403,6 +409,8 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
       targetName,
       boardName,
       manufacturerId,
+      signature,
+      mcuTypeId,
     };
   }
 
@@ -411,20 +419,20 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
     return {
       code: MSPCodes.MSP_STATUS,
       name: 'MSP_STATUS',
-      cycleTime: data.readUInt16LE(0),
-      i2cError: data.readUInt16LE(2),
-      sensor: data.readUInt16LE(4),
-      mode: data.readUInt32LE(6),
-      profile: data.readUInt32LE(10),
+      cycleTime: data.readU16(),
+      i2cError: data.readU16(),
+      activeSensors: data.readU16(),
+      mode: data.readU32(),
+      profile: data.readU8(),
     };
   }
 
   // MSP_RC
   if (code === MSPCodes.MSP_RC) {
-    const activeChannels = data.length / 2;
+    const activeChannels = data.length() / 2;
     const channels = [];
     for (let i = 0; i < activeChannels; i++) {
-      channels.push(data.readUInt16LE(i * 2));
+      channels.push(data.readU16());
     }
     return {
       code: MSPCodes.MSP_RC,
@@ -438,13 +446,13 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
     return {
       code: MSPCodes.MSP_RAW_GPS,
       name: 'MSP_RAW_GPS',
-      fix: data.readUInt8(0),
-      numSat: data.readUInt8(1),
-      lat: data.readInt32LE(2),
-      lon: data.readInt32LE(6),
-      alt: data.readInt16LE(10),
-      speed: data.readUInt16LE(12),
-      groundCourse: data.readUInt16LE(14),
+      fix: data.readU8(),
+      numSat: data.readU8(),
+      lat: data.read32(),
+      lon: data.read32(),
+      alt: data.readU16(),
+      speed: data.readU16(),
+      groundCourse: data.readU16(),
     };
   }
 
@@ -453,9 +461,9 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
     return {
       code: MSPCodes.MSP_COMP_GPS,
       name: 'MSP_COMP_GPS',
-      distanceToHome: data.readUInt16LE(0),
-      directionToHome: data.readUInt16LE(2),
-      update: data.readUInt8(4),
+      distanceToHome: data.readU16(),
+      directionToHome: data.readU16(),
+      update: data.readU8(),
     };
   }
 
@@ -465,9 +473,9 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
       code: MSPCodes.MSP_ATTITUDE,
       name: 'MSP_ATTITUDE',
       kinematics: [
-        data.readInt16LE(0) / 10, // x
-        data.readInt16LE(2) / 10, // y
-        data.readInt16LE(4) / 10, // z
+        data.read16() / 10, // x
+        data.read16() / 10, // y
+        data.read16() / 10, // z
       ],
     };
   }
@@ -477,7 +485,7 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
     return {
       code: MSPCodes.MSP_ALTITUDE,
       name: 'MSP_ALTITUDE',
-      altitude: parseFloat((data.readInt32LE() / 100.0).toFixed(2)), // correct scale factor
+      altitude: parseFloat((data.read32() / 100.0).toFixed(2)), // correct scale factor
     };
   }
 
@@ -486,7 +494,7 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
     return {
       code: MSPCodes.MSP_SONAR,
       name: 'MSP_SONAR',
-      sonar: data.readInt32LE(0),
+      sonar: data.read32(),
     };
   }
 
@@ -495,21 +503,21 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
     // 2048 for mpu6050, 1024 for mma (times 4 since we don't scale in the firmware)
     // currently we are unable to differentiate between the sensor types, so we are going with 2048
     const accelerometer: number[] = [];
-    accelerometer.push(data.readInt16LE(0) / 2048);
-    accelerometer.push(data.readInt16LE(2) / 2048);
-    accelerometer.push(data.readInt16LE(4) / 2048);
+    accelerometer.push(data.read16() / 2048);
+    accelerometer.push(data.read16() / 2048);
+    accelerometer.push(data.read16() / 2048);
 
     // properly scaled
     const gyroscope: number[] = [];
-    gyroscope.push(data.readInt16LE(6) * (4 / 16.4));
-    gyroscope.push(data.readInt16LE(8) * (4 / 16.4));
-    gyroscope.push(data.readInt16LE(10) * (4 / 16.4));
+    gyroscope.push(data.read16() * (4 / 16.4));
+    gyroscope.push(data.read16() * (4 / 16.4));
+    gyroscope.push(data.read16() * (4 / 16.4));
 
     // no clue about scaling factor
     const magnetometer: number[] = [];
-    magnetometer.push(data.readInt16LE(12));
-    magnetometer.push(data.readInt16LE(14));
-    magnetometer.push(data.readInt16LE(16));
+    magnetometer.push(data.read16());
+    magnetometer.push(data.read16());
+    magnetometer.push(data.read16());
 
     return {
       code: MSPCodes.MSP_RAW_IMU,
@@ -523,8 +531,8 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
   // MSP_SERVO
   if (code === MSPCodes.MSP_SERVO) {
     const servo: number[] = [];
-    for (let i = 0; i < data.length / 2; i++) {
-      servo.push(data.readUInt16LE(i * 2));
+    for (let i = 0; i < data.length() / 2; i++) {
+      servo.push(data.readU16());
     }
     return {
       code: MSPCodes.MSP_SERVO,
@@ -536,8 +544,8 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
   // MSP_MOTOR
   if (code === MSPCodes.MSP_MOTOR) {
     const motor: number[] = [];
-    for (let i = 0; i < data.length / 2; i++) {
-      motor.push(data.readUInt16LE(i * 2));
+    for (let i = 0; i < data.length() / 2; i++) {
+      motor.push(data.readU16());
     }
     return {
       code: MSPCodes.MSP_MOTOR,
@@ -547,31 +555,30 @@ export const parseMSPIncomeData = (buff: Buffer): MSPMsg | undefined => {
   }
 
   // MSP2_MOTOR_OUTPUT_REORDERING
-  if (code === MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING) {
-    const motorOutputReordering: number[] = [];
-    for (let i = 0; i < data.length; i++) {
-      motorOutputReordering.push(data.readUInt8(i));
-    }
-    return {
-      code: MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING,
-      name: 'MSP2_MOTOR_OUTPUT_REORDERING',
-      motorOutputReordering,
-    };
-  }
+  // if (code === MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING) {
+  //   const motorOutputReordering: number[] = [];
+  //   for (let i = 0; i < data.length; i++) {
+  //     motorOutputReordering.push(data.readUInt8(i));
+  //   }
+  //   return {
+  //     code: MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING,
+  //     name: 'MSP2_MOTOR_OUTPUT_REORDERING',
+  //     motorOutputReordering,
+  //   };
+  // }
 
   // MSP2_GET_VTX_DEVICE_STATUS
-  if (code === MSPCodes.MSP2_GET_VTX_DEVICE_STATUS) {
-    // TODO: Parse VTX status data
-    const vtxDeviceStatusData: number[] = [];
-    for (let i = 0; i < data.length; i++) {
-      vtxDeviceStatusData.push(data.readUInt8(i));
-    }
-    return {
-      code: MSPCodes.MSP2_GET_VTX_DEVICE_STATUS,
-      name: 'MSP2_GET_VTX_DEVICE_STATUS',
-      vtxDeviceStatusData,
-    };
-  }
+  // if (code === MSPCodes.MSP2_GET_VTX_DEVICE_STATUS) {
+  //   const vtxDeviceStatusData: number[] = [];
+  //   for (let i = 0; i < data.length; i++) {
+  //     vtxDeviceStatusData.push(data.readUInt8(i));
+  //   }
+  //   return {
+  //     code: MSPCodes.MSP2_GET_VTX_DEVICE_STATUS,
+  //     name: 'MSP2_GET_VTX_DEVICE_STATUS',
+  //     vtxDeviceStatusData,
+  //   };
+  // }
 
   return undefined;
 };

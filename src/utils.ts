@@ -59,3 +59,58 @@ const crc8DvbS2 = (crc: number, ch: number): number => {
   }
   return crc;
 };
+
+export const buffToDataView = (buff: Buffer) => {
+  let offset = 0;
+
+  const readU8 = () => {
+    const val = buff.readUInt8(offset);
+    offset += 1;
+    return val;
+  };
+
+  const readU16 = () => {
+    const val = buff.readUInt16LE(offset);
+    offset += 2;
+    return val;
+  };
+
+  const readU32 = () => {
+    const val = buff.readUInt32LE(offset);
+    offset += 4;
+    return val;
+  };
+
+  const read8 = () => {
+    const val = buff.readInt8(offset);
+    offset += 1;
+    return val;
+  };
+
+  const read16 = () => {
+    const val = buff.readInt16LE(offset);
+    offset += 2;
+    return val;
+  };
+
+  const read32 = () => {
+    const val = buff.readInt32LE(offset);
+    offset += 4;
+    return val;
+  };
+
+  const readText = () => {
+    const size = readU8();
+    let str = '';
+    for (let i = 0; i < size; i++) {
+      str += String.fromCharCode(readU8());
+    }
+    return str;
+  };
+
+  const remaining = () => buff.length - offset;
+
+  const length = () => buff.length;
+
+  return { readU8, readU16, readU32, read8, read16, read32, readText, remaining, length };
+};
