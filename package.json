@@ -4,6 +4,16 @@
   "main": "dist/index.js",
   "author": "Jaroslav Khorishchenko <jaro@husky-dev.me>",
   "license": "MIT",
+  "description": "MSP protocol implementation for Node.js",
+  "keywords": [
+    "MSP",
+    "Multiwii",
+    "Multiwii Serial Protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url":  "https://github.com/husky-dev/husky-dev-msp.git"
+  },
   "files": [
     "dist",
     "LICENSE",
