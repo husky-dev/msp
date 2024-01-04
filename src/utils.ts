@@ -125,4 +125,25 @@ export const buffToDataView = (buff: Buffer) => {
   return { readU8, readU16, readU32, read8, read16, read32, readText, remaining, length };
 };
 
+export const push8 = (arr: number[], val: number) => {
+  arr.push(0xff & val);
+  return arr;
+};
+
+export const push16 = (arr: number[], val: number) => {
+  // low byte
+  arr.push(0x00ff & val);
+  // high byte
+  arr.push(val >> 8);
+  return arr;
+};
+
+export const push32 = (arr: number[], val: number) => {
+  arr = push8(arr, val);
+  arr = push8(arr, val >> 8);
+  arr = push8(arr, val >> 16);
+  arr = push8(arr, val >> 24);
+  return arr;
+};
+
 export type BuffDataView = ReturnType<typeof buffToDataView>;

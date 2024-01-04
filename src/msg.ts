@@ -1133,7 +1133,17 @@ const parseSetFailsafeConfig = (data: BuffDataView): MSPSetFailsafeConfigMsg => 
 // TODO: MSP_SET_OSD_CONFIG
 // TODO: MSP_OSD_CHAR_READ
 // TODO: MSP_OSD_CHAR_WRITE
-// TODO: MSP_SET_NAME
+
+interface MSPSetNameMsg {
+  code: MSPCodes.MSP_SET_NAME;
+  name: 'MSP_SET_NAME';
+}
+
+const parseSetName = (data: BuffDataView): MSPSetNameMsg => ({
+  code: MSPCodes.MSP_SET_NAME,
+  name: 'MSP_SET_NAME',
+});
+
 // TODO: MSP2_SET_TEXT
 // TODO: MSP2_SET_LED_STRIP_CONFIG_VALUES
 // TODO: MSP_SET_FILTER_CONFIG
@@ -1267,6 +1277,8 @@ export const parseIncomingBuff = (buff: Buffer) => {
       return parseSetRxFailConfig(data);
     case MSPCodes.MSP_SET_FAILSAFE_CONFIG:
       return parseSetFailsafeConfig(data);
+    case MSPCodes.MSP_SET_NAME:
+      return parseSetName(data);
     case MSPCodes.MSP_API_VERSION:
       return parseApiVersion(data);
     case MSPCodes.MSP_FC_VARIANT:
