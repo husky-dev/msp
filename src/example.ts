@@ -38,8 +38,10 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG);
     // await msp.sendMessage(MSPCodes.MSP_BATTERY_CONFIG);
 
-    // await msp.sendMessage(MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING);
-    // await msp.sendMessage(MSPCodes.MSP2_GET_VTX_DEVICE_STATUS);
+    // await msp.sendMessage(MSPCodes.MSP_NAME);
+    // await msp.sendMessage(MSPCodes.MSP_FC_VARIANT);
+    // await msp.sendMessage(MSPCodes.MSP_FC_VERSION);
+    // await msp.sendMessage(MSPCodes.MSP_BUILD_INFO);
   });
 
   msp.on('disconnect', () => {

@@ -554,26 +554,199 @@ const parseSetBatteryConfig = (data: BuffDataView): MSPSetBatteryConfigMsg => ({
 // TODO: MSP_SERVO_CONFIGURATIONS
 // TODO: MSP_RC_DEADBAND
 // TODO: MSP_SENSOR_ALIGNMENT
-// TODO: MSP_DISPLAYPORT
-// TODO: MSP_SET_RAW_RC
-// TODO: MSP_SET_PID
-// TODO: MSP_SET_RC_TUNING
-// TODO: MSP_ACC_CALIBRATION
-// TODO: MSP_MAG_CALIBRATION
-// TODO: MSP_SET_MOTOR_CONFIG
-// TODO: MSP_SET_GPS_CONFIG
-// TODO: MSP_SET_GPS_RESCUE
-// TODO: MSP_SET_RSSI_CONFIG
-// TODO: MSP_SET_FEATURE_CONFIG
-// TODO: MSP_SET_BEEPER_CONFIG
-// TODO: MSP_RESET_CONF
-// TODO: MSP_SELECT_SETTING
-// TODO: MSP_SET_SERVO_CONFIGURATION
-// TODO: MSP_EEPROM_WRITE
-// TODO: MSP_SET_CURRENT_METER_CONFIG
-// TODO: MSP_SET_VOLTAGE_METER_CONFIG
+
+export interface MSPDisplayPortMsg {
+  code: MSPCodes.MSP_DISPLAYPORT;
+  name: 'MSP_DISPLAYPORT';
+}
+
+const parseDisplayPort = (data: BuffDataView): MSPDisplayPortMsg => ({
+  code: MSPCodes.MSP_DISPLAYPORT,
+  name: 'MSP_DISPLAYPORT',
+});
+
+export interface MSPSetRawRCMsg {
+  code: MSPCodes.MSP_SET_RAW_RC;
+  name: 'MSP_SET_RAW_RC';
+}
+
+const parseSetRawRC = (data: BuffDataView): MSPSetRawRCMsg => ({
+  code: MSPCodes.MSP_SET_RAW_RC,
+  name: 'MSP_SET_RAW_RC',
+});
+
+export interface MSPSetPIDMsg {
+  code: MSPCodes.MSP_SET_PID;
+  name: 'MSP_SET_PID';
+}
+
+const parseSetPID = (data: BuffDataView): MSPSetPIDMsg => ({
+  code: MSPCodes.MSP_SET_PID,
+  name: 'MSP_SET_PID',
+});
+
+export interface MSPSetRCTuningMsg {
+  code: MSPCodes.MSP_SET_RC_TUNING;
+  name: 'MSP_SET_RC_TUNING';
+}
+
+const parseSetRCTuning = (data: BuffDataView): MSPSetRCTuningMsg => ({
+  code: MSPCodes.MSP_SET_RC_TUNING,
+  name: 'MSP_SET_RC_TUNING',
+});
+
+export interface MSPAccCalibrationMsg {
+  code: MSPCodes.MSP_ACC_CALIBRATION;
+  name: 'MSP_ACC_CALIBRATION';
+}
+
+const parseAccCalibration = (data: BuffDataView): MSPAccCalibrationMsg => ({
+  code: MSPCodes.MSP_ACC_CALIBRATION,
+  name: 'MSP_ACC_CALIBRATION',
+});
+
+export interface MSPMagCalibrationMsg {
+  code: MSPCodes.MSP_MAG_CALIBRATION;
+  name: 'MSP_MAG_CALIBRATION';
+}
+
+const parseMagCalibration = (data: BuffDataView): MSPMagCalibrationMsg => ({
+  code: MSPCodes.MSP_MAG_CALIBRATION,
+  name: 'MSP_MAG_CALIBRATION',
+});
+
+export interface MSPSetMotorConfigMsg {
+  code: MSPCodes.MSP_SET_MOTOR_CONFIG;
+  name: 'MSP_SET_MOTOR_CONFIG';
+}
+
+const parseSetMotorConfig = (data: BuffDataView): MSPSetMotorConfigMsg => ({
+  code: MSPCodes.MSP_SET_MOTOR_CONFIG,
+  name: 'MSP_SET_MOTOR_CONFIG',
+});
+
+export interface MSPSetGPSConfigMsg {
+  code: MSPCodes.MSP_SET_GPS_CONFIG;
+  name: 'MSP_SET_GPS_CONFIG';
+}
+
+const parseSetGPSConfig = (data: BuffDataView): MSPSetGPSConfigMsg => ({
+  code: MSPCodes.MSP_SET_GPS_CONFIG,
+  name: 'MSP_SET_GPS_CONFIG',
+});
+
+export interface MSPSetGPSRescueMsg {
+  code: MSPCodes.MSP_SET_GPS_RESCUE;
+  name: 'MSP_SET_GPS_RESCUE';
+}
+
+const parseSetGPSRescue = (data: BuffDataView): MSPSetGPSRescueMsg => ({
+  code: MSPCodes.MSP_SET_GPS_RESCUE,
+  name: 'MSP_SET_GPS_RESCUE',
+});
+
+export interface MSPSetRSSIConfigMsg {
+  code: MSPCodes.MSP_SET_RSSI_CONFIG;
+  name: 'MSP_SET_RSSI_CONFIG';
+}
+
+const parseSetRSSIConfig = (data: BuffDataView): MSPSetRSSIConfigMsg => ({
+  code: MSPCodes.MSP_SET_RSSI_CONFIG,
+  name: 'MSP_SET_RSSI_CONFIG',
+});
+
+export interface MSPSetFeatureConfigMsg {
+  code: MSPCodes.MSP_SET_FEATURE_CONFIG;
+  name: 'MSP_SET_FEATURE_CONFIG';
+}
+
+const parseSetFeatureConfig = (data: BuffDataView): MSPSetFeatureConfigMsg => ({
+  code: MSPCodes.MSP_SET_FEATURE_CONFIG,
+  name: 'MSP_SET_FEATURE_CONFIG',
+});
+
+export interface MSPSetBeeperConfigMsg {
+  code: MSPCodes.MSP_SET_BEEPER_CONFIG;
+  name: 'MSP_SET_BEEPER_CONFIG';
+}
+
+const parseSetBeeperConfig = (data: BuffDataView): MSPSetBeeperConfigMsg => ({
+  code: MSPCodes.MSP_SET_BEEPER_CONFIG,
+  name: 'MSP_SET_BEEPER_CONFIG',
+});
+
+export interface MSPResetConfMsg {
+  code: MSPCodes.MSP_RESET_CONF;
+  name: 'MSP_RESET_CONF';
+}
+
+const parseResetConf = (data: BuffDataView): MSPResetConfMsg => ({
+  code: MSPCodes.MSP_RESET_CONF,
+  name: 'MSP_RESET_CONF',
+});
+
+export interface MSPSelectSettingMsg {
+  code: MSPCodes.MSP_SELECT_SETTING;
+  name: 'MSP_SELECT_SETTING';
+}
+
+const parseSelectSetting = (data: BuffDataView): MSPSelectSettingMsg => ({
+  code: MSPCodes.MSP_SELECT_SETTING,
+  name: 'MSP_SELECT_SETTING',
+});
+
+export interface MSPSetServoConfigurationMsg {
+  code: MSPCodes.MSP_SET_SERVO_CONFIGURATION;
+  name: 'MSP_SET_SERVO_CONFIGURATION';
+}
+
+const parseSetServoConfiguration = (data: BuffDataView): MSPSetServoConfigurationMsg => ({
+  code: MSPCodes.MSP_SET_SERVO_CONFIGURATION,
+  name: 'MSP_SET_SERVO_CONFIGURATION',
+});
+
+export interface MSPEepromWriteMsg {
+  code: MSPCodes.MSP_EEPROM_WRITE;
+  name: 'MSP_EEPROM_WRITE';
+}
+
+const parseEepromWrite = (data: BuffDataView): MSPEepromWriteMsg => ({
+  code: MSPCodes.MSP_EEPROM_WRITE,
+  name: 'MSP_EEPROM_WRITE',
+});
+
+export interface MSPSetCurrentMeterConfigMsg {
+  code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG;
+  name: 'MSP_SET_CURRENT_METER_CONFIG';
+}
+
+const parseSetCurrentMeterConfig = (data: BuffDataView): MSPSetCurrentMeterConfigMsg => ({
+  code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG,
+  name: 'MSP_SET_CURRENT_METER_CONFIG',
+});
+
+export interface MSPSetVoltageMeterConfigMsg {
+  code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG;
+  name: 'MSP_SET_VOLTAGE_METER_CONFIG';
+}
+
+const parseSetVoltageMeterConfig = (data: BuffDataView): MSPSetVoltageMeterConfigMsg => ({
+  code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG,
+  name: 'MSP_SET_VOLTAGE_METER_CONFIG',
+});
+
 // TODO: MSP_DEBUG
-// TODO: MSP_SET_MOTOR
+
+export interface MSPSetMotorMsg {
+  code: MSPCodes.MSP_SET_MOTOR;
+  name: 'MSP_SET_MOTOR';
+}
+
+const parseSetMotor = (data: BuffDataView): MSPSetMotorMsg => ({
+  code: MSPCodes.MSP_SET_MOTOR,
+  name: 'MSP_SET_MOTOR',
+});
+
 // TODO: MSP_UID
 // TODO: MSP_ACC_TRIM
 // TODO: MSP_SET_ACC_TRIM
@@ -600,9 +773,62 @@ const parseApiVersion = (data: BuffDataView): MSPApiVersionMsg => ({
   apiVersion: `${data.readU8()}.${data.readU8()}.0`,
 });
 
-// TODO: MSP_FC_VARIANT
-// TODO: MSP_FC_VERSION
-// TODO: MSP_BUILD_INFO
+export interface MSPFcVariantMsg {
+  code: MSPCodes.MSP_FC_VARIANT;
+  name: 'MSP_FC_VARIANT';
+  fcVariantIdentifier: string;
+}
+
+const parseFcVariant = (data: BuffDataView): MSPFcVariantMsg => {
+  let fcVariantIdentifier = '';
+  for (let i = 0; i < 4; i++) {
+    fcVariantIdentifier += String.fromCharCode(data.readU8());
+  }
+  return {
+    code: MSPCodes.MSP_FC_VARIANT,
+    name: 'MSP_FC_VARIANT',
+    fcVariantIdentifier,
+  };
+};
+
+export interface MSPFcVersionMsg {
+  code: MSPCodes.MSP_FC_VERSION;
+  name: 'MSP_FC_VERSION';
+  flightControllerVersion: string;
+}
+
+const parseFcVersion = (data: BuffDataView): MSPFcVersionMsg => ({
+  code: MSPCodes.MSP_FC_VERSION,
+  name: 'MSP_FC_VERSION',
+  flightControllerVersion: `${data.readU8()}.${data.readU8()}.${data.readU8()}`,
+});
+
+export interface MSPBuildInfoMsg {
+  code: MSPCodes.MSP_BUILD_INFO;
+  name: 'MSP_BUILD_INFO';
+  buildInfo: string;
+}
+
+const parseBuildInfo = (data: BuffDataView): MSPBuildInfoMsg => {
+  const dateLength = 11;
+  const buff: number[] = [];
+
+  for (let i = 0; i < dateLength; i++) {
+    buff.push(data.readU8());
+  }
+  buff.push(32); // ascii space
+
+  const timeLength = 8;
+  for (let i = 0; i < timeLength; i++) {
+    buff.push(data.readU8());
+  }
+
+  return {
+    code: MSPCodes.MSP_BUILD_INFO,
+    name: 'MSP_BUILD_INFO',
+    buildInfo: String.fromCharCode.apply(null, buff),
+  };
+};
 
 interface MSPBoardInfoMsg {
   code: MSPCodes.MSP_BOARD_INFO;
@@ -666,7 +892,29 @@ const parseBoardInfo = (data: BuffDataView): MSPBoardInfoMsg => {
   };
 };
 
-// TODO: MSP_NAME
+interface MSPNameMsg {
+  code: MSPCodes.MSP_NAME;
+  name: 'MSP_NAME';
+  value: string;
+}
+
+const parseName = (data: BuffDataView): MSPNameMsg => {
+  let value: string = '';
+  let char: number | null;
+  for (let i = 0; i < data.length(); i++) {
+    char = data.readU8();
+    if (char === 0) {
+      break;
+    }
+    value += String.fromCharCode(char);
+  }
+  return {
+    code: MSPCodes.MSP_NAME,
+    name: 'MSP_NAME',
+    value,
+  };
+};
+
 // TODO: MSP2_GET_TEXT
 // TODO: PILOT_NAME
 // TODO: CRAFT_NAME
@@ -949,6 +1197,44 @@ export const parseIncomingBuff = (buff: Buffer) => {
       return parseBatteryConfig(data);
     case MSPCodes.MSP_SET_BATTERY_CONFIG:
       return parseSetBatteryConfig(data);
+    case MSPCodes.MSP_DISPLAYPORT:
+      return parseDisplayPort(data);
+    case MSPCodes.MSP_SET_RAW_RC:
+      return parseSetRawRC(data);
+    case MSPCodes.MSP_SET_PID:
+      return parseSetPID(data);
+    case MSPCodes.MSP_SET_RC_TUNING:
+      return parseSetRCTuning(data);
+    case MSPCodes.MSP_ACC_CALIBRATION:
+      return parseAccCalibration(data);
+    case MSPCodes.MSP_MAG_CALIBRATION:
+      return parseMagCalibration(data);
+    case MSPCodes.MSP_SET_MOTOR_CONFIG:
+      return parseSetMotorConfig(data);
+    case MSPCodes.MSP_SET_GPS_CONFIG:
+      return parseSetGPSConfig(data);
+    case MSPCodes.MSP_SET_GPS_RESCUE:
+      return parseSetGPSRescue(data);
+    case MSPCodes.MSP_SET_RSSI_CONFIG:
+      return parseSetRSSIConfig(data);
+    case MSPCodes.MSP_SET_FEATURE_CONFIG:
+      return parseSetFeatureConfig(data);
+    case MSPCodes.MSP_SET_BEEPER_CONFIG:
+      return parseSetBeeperConfig(data);
+    case MSPCodes.MSP_RESET_CONF:
+      return parseResetConf(data);
+    case MSPCodes.MSP_SELECT_SETTING:
+      return parseSelectSetting(data);
+    case MSPCodes.MSP_SET_SERVO_CONFIGURATION:
+      return parseSetServoConfiguration(data);
+    case MSPCodes.MSP_EEPROM_WRITE:
+      return parseEepromWrite(data);
+    case MSPCodes.MSP_SET_CURRENT_METER_CONFIG:
+      return parseSetCurrentMeterConfig(data);
+    case MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG:
+      return parseSetVoltageMeterConfig(data);
+    case MSPCodes.MSP_SET_MOTOR:
+      return parseSetMotor(data);
     case MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL:
       return parseSetVtxTablePowerLevel(data);
     case MSPCodes.MSP_SET_MODE_RANGE:
@@ -983,8 +1269,16 @@ export const parseIncomingBuff = (buff: Buffer) => {
       return parseSetFailsafeConfig(data);
     case MSPCodes.MSP_API_VERSION:
       return parseApiVersion(data);
+    case MSPCodes.MSP_FC_VARIANT:
+      return parseFcVariant(data);
+    case MSPCodes.MSP_FC_VERSION:
+      return parseFcVersion(data);
+    case MSPCodes.MSP_BUILD_INFO:
+      return parseBuildInfo(data);
     case MSPCodes.MSP_BOARD_INFO:
       return parseBoardInfo(data);
+    case MSPCodes.MSP_NAME:
+      return parseName(data);
     default:
       return undefined;
   }
