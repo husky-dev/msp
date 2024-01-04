@@ -1,16 +1,17 @@
 {
-  "name": "husky-msp",
+  "name": "@husky-dev/msp",
   "version": "1.0.0",
   "main": "dist/index.js",
   "author": "Jaroslav Khorishchenko <jaro@husky-dev.me>",
   "license": "MIT",
   "files": [
-    "dist/index.js",
+    "dist",
     "LICENSE",
     "README.md"
   ],
   "scripts": {
-    "start": "ts-node ./src/example.ts"
+    "start": "ts-node ./src/example.ts",
+    "dist": "tsc"
   },
   "dependencies": {
     "serialport": "12.0.0"
