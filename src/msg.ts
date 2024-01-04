@@ -531,6 +531,11 @@ export interface MSPSetBatteryConfigMsg {
   name: 'MSP_SET_BATTERY_CONFIG';
 }
 
+const parseSetBatteryConfig = (data: BuffDataView): MSPSetBatteryConfigMsg => ({
+  code: MSPCodes.MSP_SET_BATTERY_CONFIG,
+  name: 'MSP_SET_BATTERY_CONFIG',
+});
+
 // TODO: MSP_RC_TUNING
 // TODO: MSP_PID
 // TODO: MSP_ARMING_CONFIG
@@ -635,6 +640,16 @@ const parseBoardInfo = (data: BuffDataView): MSPBoardInfoMsg => {
   const mcuTypeId = data.readU8();
 
   // TODO: Parse board info additional data depending on API version
+  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_42)) {
+  //     FC.CONFIG.configurationState = data.readU8();
+  // }
+
+  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_43)) {
+  //     FC.CONFIG.sampleRateHz = data.readU16();
+  //     FC.CONFIG.configurationProblems = data.readU32();
+  // } else {
+  //     FC.CONFIG.configurationProblems = 0;
+  // }
 
   return {
     code: MSPCodes.MSP_BOARD_INFO,
@@ -701,22 +716,169 @@ const parseBoardInfo = (data: BuffDataView): MSPBoardInfoMsg => {
 // TODO: MSP_CALCULATE_SIMPLIFIED_GYRO
 // TODO: MSP_CALCULATE_SIMPLIFIED_DTERM
 // TODO: MSP_VALIDATE_SIMPLIFIED_TUNING
-// TODO: MSP_SET_VTXTABLE_POWERLEVEL
-// TODO: MSP_SET_MODE_RANGE
-// TODO: MSP_SET_ADJUSTMENT_RANGE
-// TODO: MSP_SET_BOARD_ALIGNMENT_CONFIG
-// TODO: MSP_PID_CONTROLLER
-// TODO: MSP_SET_PID_CONTROLLER
-// TODO: MSP_SET_LOOP_TIME
-// TODO: MSP_SET_ARMING_CONFIG
-// TODO: MSP_SET_RESET_CURR_PID
-// TODO: MSP_SET_MOTOR_3D_CONFIG
-// TODO: MSP_SET_MIXER_CONFIG
-// TODO: MSP_SET_RC_DEADBAND
-// TODO: MSP_SET_SENSOR_ALIGNMENT
-// TODO: MSP_SET_RX_CONFIG
-// TODO: MSP_SET_RXFAIL_CONFIG
-// TODO: MSP_SET_FAILSAFE_CONFIG
+
+interface MSPSetVtxTablePowerLevelMsg {
+  code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL;
+  name: 'MSP_SET_VTXTABLE_POWERLEVEL';
+}
+
+const parseSetVtxTablePowerLevel = (data: BuffDataView): MSPSetVtxTablePowerLevelMsg => ({
+  code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL,
+  name: 'MSP_SET_VTXTABLE_POWERLEVEL',
+});
+
+interface MSPSetModeRangeMsg {
+  code: MSPCodes.MSP_SET_MODE_RANGE;
+  name: 'MSP_SET_MODE_RANGE';
+}
+
+const parseSetModeRange = (data: BuffDataView): MSPSetModeRangeMsg => ({
+  code: MSPCodes.MSP_SET_MODE_RANGE,
+  name: 'MSP_SET_MODE_RANGE',
+});
+
+interface MSPSetAdjustmentRangeMsg {
+  code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE;
+  name: 'MSP_SET_ADJUSTMENT_RANGE';
+}
+
+const parseSetAdjustmentRange = (data: BuffDataView): MSPSetAdjustmentRangeMsg => ({
+  code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE,
+  name: 'MSP_SET_ADJUSTMENT_RANGE',
+});
+
+interface MSPSetBoardAlignmentConfigMsg {
+  code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG;
+  name: 'MSP_SET_BOARD_ALIGNMENT_CONFIG';
+}
+
+const parseSetBoardAlignmentConfig = (data: BuffDataView): MSPSetBoardAlignmentConfigMsg => ({
+  code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG,
+  name: 'MSP_SET_BOARD_ALIGNMENT_CONFIG',
+});
+
+interface MSPPidControllerMsg {
+  code: MSPCodes.MSP_PID_CONTROLLER;
+  name: 'MSP_PID_CONTROLLER';
+  controller: number;
+}
+
+const parsePidController = (data: BuffDataView): MSPPidControllerMsg => ({
+  code: MSPCodes.MSP_PID_CONTROLLER,
+  name: 'MSP_PID_CONTROLLER',
+  controller: data.readU8(),
+});
+
+interface MSPSetPidControllerMsg {
+  code: MSPCodes.MSP_SET_PID_CONTROLLER;
+  name: 'MSP_SET_PID_CONTROLLER';
+}
+
+const parseSetPidController = (data: BuffDataView): MSPSetPidControllerMsg => ({
+  code: MSPCodes.MSP_SET_PID_CONTROLLER,
+  name: 'MSP_SET_PID_CONTROLLER',
+});
+
+interface MSPSetLoopTimeMsg {
+  code: MSPCodes.MSP_SET_LOOP_TIME;
+  name: 'MSP_SET_LOOP_TIME';
+}
+
+const parseSetLoopTime = (data: BuffDataView): MSPSetLoopTimeMsg => ({
+  code: MSPCodes.MSP_SET_LOOP_TIME,
+  name: 'MSP_SET_LOOP_TIME',
+});
+
+interface MSPSetArmingConfigMsg {
+  code: MSPCodes.MSP_SET_ARMING_CONFIG;
+  name: 'MSP_SET_ARMING_CONFIG';
+}
+
+const parseSetArmingConfig = (data: BuffDataView): MSPSetArmingConfigMsg => ({
+  code: MSPCodes.MSP_SET_ARMING_CONFIG,
+  name: 'MSP_SET_ARMING_CONFIG',
+});
+
+interface MSPSetResetCurrPidMsg {
+  code: MSPCodes.MSP_SET_RESET_CURR_PID;
+  name: 'MSP_SET_RESET_CURR_PID';
+}
+
+const parseSetResetCurrPid = (data: BuffDataView): MSPSetResetCurrPidMsg => ({
+  code: MSPCodes.MSP_SET_RESET_CURR_PID,
+  name: 'MSP_SET_RESET_CURR_PID',
+});
+
+interface MSPSetMotor3DConfigMsg {
+  code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG;
+  name: 'MSP_SET_MOTOR_3D_CONFIG';
+}
+
+const parseSetMotor3DConfig = (data: BuffDataView): MSPSetMotor3DConfigMsg => ({
+  code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG,
+  name: 'MSP_SET_MOTOR_3D_CONFIG',
+});
+
+interface MSPSetMixerConfigMsg {
+  code: MSPCodes.MSP_SET_MIXER_CONFIG;
+  name: 'MSP_SET_MIXER_CONFIG';
+}
+
+const parseSetMixerConfig = (data: BuffDataView): MSPSetMixerConfigMsg => ({
+  code: MSPCodes.MSP_SET_MIXER_CONFIG,
+  name: 'MSP_SET_MIXER_CONFIG',
+});
+
+interface MSPSetRcDeadbandMsg {
+  code: MSPCodes.MSP_SET_RC_DEADBAND;
+  name: 'MSP_SET_RC_DEADBAND';
+}
+
+const parseSetRcDeadband = (data: BuffDataView): MSPSetRcDeadbandMsg => ({
+  code: MSPCodes.MSP_SET_RC_DEADBAND,
+  name: 'MSP_SET_RC_DEADBAND',
+});
+
+interface MSPSetSensorAlignmentMsg {
+  code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT;
+  name: 'MSP_SET_SENSOR_ALIGNMENT';
+}
+
+const parseSetSensorAlignment = (data: BuffDataView): MSPSetSensorAlignmentMsg => ({
+  code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT,
+  name: 'MSP_SET_SENSOR_ALIGNMENT',
+});
+
+interface MSPSetRxConfigMsg {
+  code: MSPCodes.MSP_SET_RX_CONFIG;
+  name: 'MSP_SET_RX_CONFIG';
+}
+
+const parseSetRxConfig = (data: BuffDataView): MSPSetRxConfigMsg => ({
+  code: MSPCodes.MSP_SET_RX_CONFIG,
+  name: 'MSP_SET_RX_CONFIG',
+});
+
+interface MSPSetRxFailConfigMsg {
+  code: MSPCodes.MSP_SET_RXFAIL_CONFIG;
+  name: 'MSP_SET_RXFAIL_CONFIG';
+}
+
+const parseSetRxFailConfig = (data: BuffDataView): MSPSetRxFailConfigMsg => ({
+  code: MSPCodes.MSP_SET_RXFAIL_CONFIG,
+  name: 'MSP_SET_RXFAIL_CONFIG',
+});
+
+interface MSPSetFailsafeConfigMsg {
+  code: MSPCodes.MSP_SET_FAILSAFE_CONFIG;
+  name: 'MSP_SET_FAILSAFE_CONFIG';
+}
+
+const parseSetFailsafeConfig = (data: BuffDataView): MSPSetFailsafeConfigMsg => ({
+  code: MSPCodes.MSP_SET_FAILSAFE_CONFIG,
+  name: 'MSP_SET_FAILSAFE_CONFIG',
+});
+
 // TODO: MSP_OSD_CANVAS
 // TODO: MSP_SET_OSD_CANVAS
 // TODO: MSP_OSD_CONFIG
@@ -786,10 +948,39 @@ export const parseIncomingBuff = (buff: Buffer) => {
     case MSPCodes.MSP_BATTERY_CONFIG:
       return parseBatteryConfig(data);
     case MSPCodes.MSP_SET_BATTERY_CONFIG:
-      return {
-        code: MSPCodes.MSP_SET_BATTERY_CONFIG,
-        name: 'MSP_SET_BATTERY_CONFIG',
-      };
+      return parseSetBatteryConfig(data);
+    case MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL:
+      return parseSetVtxTablePowerLevel(data);
+    case MSPCodes.MSP_SET_MODE_RANGE:
+      return parseSetModeRange(data);
+    case MSPCodes.MSP_SET_ADJUSTMENT_RANGE:
+      return parseSetAdjustmentRange(data);
+    case MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG:
+      return parseSetBoardAlignmentConfig(data);
+    case MSPCodes.MSP_PID_CONTROLLER:
+      return parsePidController(data);
+    case MSPCodes.MSP_SET_PID_CONTROLLER:
+      return parseSetPidController(data);
+    case MSPCodes.MSP_SET_LOOP_TIME:
+      return parseSetLoopTime(data);
+    case MSPCodes.MSP_SET_ARMING_CONFIG:
+      return parseSetArmingConfig(data);
+    case MSPCodes.MSP_SET_RESET_CURR_PID:
+      return parseSetResetCurrPid(data);
+    case MSPCodes.MSP_SET_MOTOR_3D_CONFIG:
+      return parseSetMotor3DConfig(data);
+    case MSPCodes.MSP_SET_MIXER_CONFIG:
+      return parseSetMixerConfig(data);
+    case MSPCodes.MSP_SET_RC_DEADBAND:
+      return parseSetRcDeadband(data);
+    case MSPCodes.MSP_SET_SENSOR_ALIGNMENT:
+      return parseSetSensorAlignment(data);
+    case MSPCodes.MSP_SET_RX_CONFIG:
+      return parseSetRxConfig(data);
+    case MSPCodes.MSP_SET_RXFAIL_CONFIG:
+      return parseSetRxFailConfig(data);
+    case MSPCodes.MSP_SET_FAILSAFE_CONFIG:
+      return parseSetFailsafeConfig(data);
     case MSPCodes.MSP_API_VERSION:
       return parseApiVersion(data);
     case MSPCodes.MSP_BOARD_INFO:
