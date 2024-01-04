@@ -156,6 +156,11 @@ const parseServo = (data: BuffDataView): MSPServoMsg => {
   };
 };
 
+/**
+ * This structure represents the current motor values.
+ * The number of motors is determined by the MSP_MOTOR_CONFIG message.
+ * The values are in microseconds, and the range is determined by the MSP_SET_MOTOR_CONFIG message.
+ */
 interface MSPMotorMsg {
   code: MSPCodes.MSP_MOTOR;
   name: 'MSP_MOTOR';
@@ -541,7 +546,40 @@ const parseSetBatteryConfig = (data: BuffDataView): MSPSetBatteryConfigMsg => ({
 // TODO: MSP_ARMING_CONFIG
 // TODO: MSP_LOOP_TIME
 // TODO: MSP_MISC
-// TODO: MSP_MOTOR_CONFIG
+
+interface MSPMotorConfigMsg {
+  code: MSPCodes.MSP_MOTOR_CONFIG;
+  name: 'MSP_MOTOR_CONFIG';
+  minthrottle: number;
+  maxthrottle: number;
+  mincommand: number;
+  motorCount?: number;
+  motorPoles?: number;
+  useDshotTelemetry?: boolean;
+  useEscSensor?: boolean;
+}
+
+const parseMotorConfig = (data: BuffDataView): MSPMotorConfigMsg => {
+  const msg: MSPMotorConfigMsg = {
+    code: MSPCodes.MSP_MOTOR_CONFIG,
+    name: 'MSP_MOTOR_CONFIG',
+    minthrottle: data.readU16(),
+    maxthrottle: data.readU16(),
+    mincommand: data.readU16(),
+  };
+  msg.motorCount = data.readU8();
+  msg.motorPoles = data.readU8();
+  msg.useDshotTelemetry = data.readU8() !== 0;
+  msg.useEscSensor = data.readU8() !== 0;
+  //   if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_42)) {
+  //     FC.MOTOR_CONFIG.motor_count = data.readU8();
+  //     FC.MOTOR_CONFIG.motor_poles = data.readU8();
+  //     FC.MOTOR_CONFIG.use_dshot_telemetry = data.readU8() != 0;
+  //     FC.MOTOR_CONFIG.use_esc_sensor = data.readU8() != 0;
+  // }
+  return msg;
+};
+
 // TODO: MSP_COMPASS_CONFIG
 // TODO: MSP_GPS_CONFIG
 // TODO: MSP_GPS_RESCUE
@@ -1207,6 +1245,8 @@ export const parseIncomingBuff = (buff: Buffer) => {
       return parseBatteryConfig(data);
     case MSPCodes.MSP_SET_BATTERY_CONFIG:
       return parseSetBatteryConfig(data);
+    case MSPCodes.MSP_MOTOR_CONFIG:
+      return parseMotorConfig(data);
     case MSPCodes.MSP_DISPLAYPORT:
       return parseDisplayPort(data);
     case MSPCodes.MSP_SET_RAW_RC:

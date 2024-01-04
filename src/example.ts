@@ -29,6 +29,7 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_SONAR);
     // await msp.sendMessage(MSPCodes.MSP_SERVO);
     // await msp.sendMessage(MSPCodes.MSP_MOTOR);
+    // await msp.sendMessage(MSPCodes.MSP_MOTOR_CONFIG);
     // await msp.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY);
     // await msp.sendMessage(MSPCodes.MSP_ANALOG);
     // await msp.sendMessage(MSPCodes.MSP_VOLTAGE_METERS);
@@ -38,7 +39,7 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG);
     // await msp.sendMessage(MSPCodes.MSP_BATTERY_CONFIG);
 
-    await msp.sendMessage(MSPCodes.MSP_NAME);
+    // await msp.sendMessage(MSPCodes.MSP_NAME);
     // await msp.sendMessage(MSPCodes.MSP_FC_VARIANT);
     // await msp.sendMessage(MSPCodes.MSP_FC_VERSION);
     // await msp.sendMessage(MSPCodes.MSP_BUILD_INFO);
