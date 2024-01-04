@@ -4,27 +4,19 @@ import { encodeMessageV1, encodeMessageV2 } from './utils';
 import { EventEmitter } from 'events';
 import { MSPCodes } from './codes';
 
-interface MSPPortOpts {
+interface MultiwiiSerialProtocolOpts {
   path: string;
-  baudRate: number;
+  baudRate?: number;
 }
-
-// const port = new SerialPort({
-//   path: '/dev/tty.usbmodem0x80000001',
-//   baudRate: 115200,
-//   dataBits: 8,
-//   stopBits: 1,
-//   parity: 'none',
-//   autoOpen: false,
-// });
 
 export class MultiwiiSerialProtocol extends EventEmitter {
   private port: SerialPort;
   private conencted: boolean = false;
 
-  constructor(opt: MSPPortOpts) {
+  constructor(opt: MultiwiiSerialProtocolOpts) {
+    const { path, baudRate = 115200 } = opt;
     super();
-    this.port = new SerialPort({ ...opt, autoOpen: false });
+    this.port = new SerialPort({ path, baudRate, autoOpen: false });
     this.port.on('open', this.onOpen.bind(this));
     this.port.on('close', this.onClose.bind(this));
     this.port.on('error', this.onError.bind(this));
@@ -57,7 +49,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
       const len = buff[3];
       const code = buff[4];
       const data = buff.slice(5, 5 + len);
-      console.log('Unknown message', { len, code, data });
+      this.emit('error', new Error(`Invalid message, code: ${code}`));
     }
   }
 
@@ -66,11 +58,11 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    */
 
   public async connect() {
-    return await this.port.open();
+    return this.port.open();
   }
 
   public async disconnect() {
-    return await this.port.close();
+    return this.port.close();
   }
 
   /**
@@ -78,6 +70,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    */
 
   public async sendMessage(code: MSPCodes, payload: Buffer = Buffer.from([])): Promise<boolean> {
+    if (!this.conencted) {
+      throw new Error('Not connected');
+    }
     const bufferOut = code <= 254 ? encodeMessageV1(code, payload) : encodeMessageV2(code, payload);
     return this.port.write(bufferOut);
   }
