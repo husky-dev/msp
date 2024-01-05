@@ -1,5 +1,5 @@
 import { MSPCodes } from './codes';
-import { BuffDataView, buffToDataView } from './utils';
+import { BuffDataView, buffToDataView, push8 } from './utils';
 
 const SIGNATURE_LENGTH = 32;
 
@@ -1182,6 +1182,15 @@ const parseSetName = (data: BuffDataView): MSPSetNameMsg => ({
   name: 'MSP_SET_NAME',
 });
 
+export const composeSetName = (name: string): Buffer => {
+  let buffer: number[] = [];
+  const MSP_BUFFER_SIZE = 64;
+  for (let i = 0; i < name.length && i < MSP_BUFFER_SIZE; i++) {
+    buffer = push8(buffer, name.charCodeAt(i));
+  }
+  return Buffer.from(buffer);
+};
+
 // TODO: MSP2_SET_TEXT
 // TODO: MSP2_SET_LED_STRIP_CONFIG_VALUES
 // TODO: MSP_SET_FILTER_CONFIG
@@ -1194,7 +1203,7 @@ const parseSetName = (data: BuffDataView): MSPSetNameMsg => ({
 // TODO: MSP2_SEND_DSHOT_COMMAND
 // TODO: MSP_MULTIPLE_MSP
 
-export const parseIncomingBuff = (buff: Buffer) => {
+export const parseMsg = (buff: Buffer) => {
   const len = buff[3];
   const code = buff[4];
   const payload = buff.slice(5, 5 + len);
@@ -1336,4 +1345,4 @@ export const parseIncomingBuff = (buff: Buffer) => {
   }
 };
 
-export type MSPMsg = ReturnType<typeof parseIncomingBuff>;
+export type MSPMsg = ReturnType<typeof parseMsg>;

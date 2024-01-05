@@ -1,5 +1,5 @@
 import { SerialPort } from 'serialport';
-import { parseIncomingBuff } from './msg';
+import { composeSetName, parseMsg } from './msg';
 import { encodeMessageV1, encodeMessageV2, push8 } from './utils';
 import { EventEmitter } from 'events';
 import { MSPCodes } from './codes';
@@ -42,7 +42,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   private onData(buff: Buffer) {
-    const msg = parseIncomingBuff(buff);
+    const msg = parseMsg(buff);
     if (msg) {
       this.emit('message', msg);
     } else {
@@ -78,12 +78,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   public async setName(name: string) {
-    let buffer: number[] = [];
-    const MSP_BUFFER_SIZE = 64;
-    for (let i = 0; i < name.length && i < MSP_BUFFER_SIZE; i++) {
-      buffer = push8(buffer, name.charCodeAt(i));
-    }
-    return this.sendMessage(MSPCodes.MSP_SET_NAME, Buffer.from(buffer));
+    return this.sendMessage(MSPCodes.MSP_SET_NAME, composeSetName(name));
   }
 }
 
