@@ -1,18 +1,12 @@
 import { MultiwiiSerialProtocol, MSPCodes, MSPMsg } from './index';
 
-// const port = new SerialPort({
-//   path: '/dev/tty.usbmodem0x80000001',
-//   baudRate: 115200,
-//   dataBits: 8,
-//   stopBits: 1,
-//   parity: 'none',
-//   autoOpen: false,
-// });
-
 const main = async () => {
   const msp = new MultiwiiSerialProtocol({
     path: '/dev/tty.usbmodem0x80000001',
     baudRate: 115200,
+    // dataBits: 8,
+    // stopBits: 1,
+    // parity: 'none',
   });
 
   msp.on('connect', async () => {
