@@ -1,5 +1,5 @@
 import { MSPCodes } from './codes';
-import { BuffDataView, buffToDataView, push8 } from './utils';
+import { BuffDataView, buffToDataView, push16, push8 } from './utils';
 
 const SIGNATURE_LENGTH = 32;
 
@@ -785,6 +785,14 @@ const parseSetMotor = (data: BuffDataView): MSPSetMotorMsg => ({
   name: 'MSP_SET_MOTOR',
 });
 
+export const composeSetMotor = (motor: number[]): Buffer => {
+  let buffer: number[] = [];
+  for (let i = 0; i < motor.length; i++) {
+    buffer = push16(buffer, motor[1]);
+  }
+  return Buffer.from(buffer);
+};
+
 // TODO: MSP_UID
 // TODO: MSP_ACC_TRIM
 // TODO: MSP_SET_ACC_TRIM
@@ -1203,10 +1211,7 @@ export const composeSetName = (name: string): Buffer => {
 // TODO: MSP2_SEND_DSHOT_COMMAND
 // TODO: MSP_MULTIPLE_MSP
 
-export const parseMsg = (buff: Buffer) => {
-  const len = buff[3];
-  const code = buff[4];
-  const payload = buff.slice(5, 5 + len);
+export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
 
   switch (code) {
@@ -1220,10 +1225,6 @@ export const parseMsg = (buff: Buffer) => {
       return parseServo(data);
     case MSPCodes.MSP_MOTOR:
       return parseMotor(data);
-    case MSPCodes.MSP2_MOTOR_OUTPUT_REORDERING:
-      return undefined;
-    case MSPCodes.MSP2_GET_VTX_DEVICE_STATUS:
-      return undefined;
     case MSPCodes.MSP_MOTOR_TELEMETRY:
       return parseMotorTelemetry(data);
     case MSPCodes.MSP_RC:
@@ -1340,9 +1341,8 @@ export const parseMsg = (buff: Buffer) => {
       return parseBoardInfo(data);
     case MSPCodes.MSP_NAME:
       return parseName(data);
-    default:
-      return undefined;
   }
+  throw new Error(`Unknown MSP code: ${code}`);
 };
 
 export type MSPMsg = ReturnType<typeof parseMsg>;

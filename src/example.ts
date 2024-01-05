@@ -43,7 +43,22 @@ const main = async () => {
     // await msp.sendMessage(MSPCodes.MSP_FC_VARIANT);
     // await msp.sendMessage(MSPCodes.MSP_FC_VERSION);
     // await msp.sendMessage(MSPCodes.MSP_BUILD_INFO);
-    // await msp.setName('SDUA_123456');
+
+    // console.log('set name');
+    // await msp.setName('SDUA_12345');
+    // console.log('set name done');
+
+    // console.log('get name');
+    // const name = await msp.getName();
+    // console.log('get name done', { name });
+
+    // console.log('set motor');
+    // await msp.setMotor([2000, 2000, 2000, 2000]);
+    // console.log('set motor done');
+
+    // console.log('get motor');
+    // const motor = await msp.getMotor();
+    // console.log('motor', motor);
   });
 
   msp.on('disconnect', () => {
