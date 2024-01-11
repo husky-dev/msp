@@ -190,17 +190,17 @@ export class MultiwiiSerialProtocol extends EventEmitter {
 
   // MSP_FC_VARIANT
   public async getFcVariant() {
-    return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT)).fcVariantIdentifier;
+    return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT));
   }
 
   // MSP_FC_VERSION
   public async getFcVersion() {
-    return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION)).flightControllerVersion;
+    return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION));
   }
 
   // MSP_BUILD_INFO
   public async getBuildInfo() {
-    return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO)).buildInfo;
+    return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO));
   }
 
   // MSP_BOARD_INFO
@@ -210,7 +210,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
 
   // MSP_NAME
   public async getName() {
-    return parseName(await this.sendMessage(MSPCodes.MSP_NAME)).value;
+    return parseName(await this.sendMessage(MSPCodes.MSP_NAME));
   }
 
   // MSP_SET_NAME

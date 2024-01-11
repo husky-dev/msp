@@ -728,7 +728,12 @@ export const composeSetMotor = (motor: number[]): Buffer => {
 // TODO: MSP_BOARD_ALIGNMENT_CONFIG
 // TODO: MSP_SET_REBOOT
 
-export const parseApiVersion = (data: BuffDataView) => ({
+export interface MSPApiVersion {
+  mspProtocolVersion: number;
+  apiVersion: string;
+}
+
+export const parseApiVersion = (data: BuffDataView): MSPApiVersion => ({
   mspProtocolVersion: data.readU8(),
   apiVersion: `${data.readU8()}.${data.readU8()}.0`,
 });
@@ -738,14 +743,10 @@ export const parseFcVariant = (data: BuffDataView) => {
   for (let i = 0; i < 4; i++) {
     fcVariantIdentifier += String.fromCharCode(data.readU8());
   }
-  return {
-    fcVariantIdentifier,
-  };
+  return fcVariantIdentifier;
 };
 
-export const parseFcVersion = (data: BuffDataView) => ({
-  flightControllerVersion: `${data.readU8()}.${data.readU8()}.${data.readU8()}`,
-});
+export const parseFcVersion = (data: BuffDataView) => `${data.readU8()}.${data.readU8()}.${data.readU8()}`;
 
 export const parseBuildInfo = (data: BuffDataView) => {
   const dateLength = 11;
@@ -761,9 +762,7 @@ export const parseBuildInfo = (data: BuffDataView) => {
     buff.push(data.readU8());
   }
 
-  return {
-    buildInfo: String.fromCharCode.apply(null, buff),
-  };
+  return String.fromCharCode.apply(null, buff);
 };
 
 export interface MSPBoardInfo {
@@ -834,9 +833,7 @@ export const parseName = (data: BuffDataView) => {
     }
     value += String.fromCharCode(char);
   }
-  return {
-    value,
-  };
+  return value;
 };
 
 // TODO: MSP2_GET_TEXT
@@ -1200,15 +1197,15 @@ export const parseMsg = (code: number, payload: Buffer) => {
     case MSPCodes.MSP_API_VERSION:
       return { code: MSPCodes.MSP_API_VERSION, name: 'MSP_API_VERSION', ...parseApiVersion(data) };
     case MSPCodes.MSP_FC_VARIANT:
-      return { code: MSPCodes.MSP_FC_VARIANT, name: 'MSP_FC_VARIANT', ...parseFcVariant(data) };
+      return { code: MSPCodes.MSP_FC_VARIANT, name: 'MSP_FC_VARIANT', fcVariantIdentifier: parseFcVariant(data) };
     case MSPCodes.MSP_FC_VERSION:
-      return { code: MSPCodes.MSP_FC_VERSION, name: 'MSP_FC_VERSION', ...parseFcVersion(data) };
+      return { code: MSPCodes.MSP_FC_VERSION, name: 'MSP_FC_VERSION', flightControllerVersion: parseFcVersion(data) };
     case MSPCodes.MSP_BUILD_INFO:
-      return { code: MSPCodes.MSP_BUILD_INFO, name: 'MSP_BUILD_INFO', ...parseBuildInfo(data) };
+      return { code: MSPCodes.MSP_BUILD_INFO, name: 'MSP_BUILD_INFO', buildInfo: parseBuildInfo(data) };
     case MSPCodes.MSP_BOARD_INFO:
       return { code: MSPCodes.MSP_BOARD_INFO, name: 'MSP_BOARD_INFO', ...parseBoardInfo(data) };
     case MSPCodes.MSP_NAME:
-      return { code: MSPCodes.MSP_NAME, name: 'MSP_NAME', ...parseName(data) };
+      return { code: MSPCodes.MSP_NAME, name: 'MSP_NAME', value: parseName(data) };
   }
   throw new Error(`Unknown MSP code: ${code}`);
 };
