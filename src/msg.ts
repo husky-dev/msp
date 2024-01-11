@@ -7,9 +7,7 @@ const SIGNATURE_LENGTH = 32;
  * This structure represents the status of the flight controller, including the current system status,
  * cycle time, and various flags indicating the active features and sensors.
  */
-interface MSPStatusMsg {
-  code: MSPCodes.MSP_STATUS;
-  name: 'MSP_STATUS';
+export interface MSPStatus {
   /**  The time, in microseconds, it takes to complete one full cycle of the main loop.  */
   cycleTime: number;
   /**  The number of I2C errors that have occurred since the last MSP_STATUS message was sent.  */
@@ -22,9 +20,7 @@ interface MSPStatusMsg {
   profile: number;
 }
 
-const parseStatus = (data: BuffDataView): MSPStatusMsg => ({
-  code: MSPCodes.MSP_STATUS,
-  name: 'MSP_STATUS',
+export const parseStatus = (data: BuffDataView): MSPStatus => ({
   cycleTime: data.readU16(),
   i2cError: data.readU16(),
   activeSensors: data.readU16(),
@@ -32,9 +28,7 @@ const parseStatus = (data: BuffDataView): MSPStatusMsg => ({
   profile: data.readU8(),
 });
 
-interface MSPStatusExMsg {
-  code: MSPCodes.MSP_STATUS_EX;
-  name: 'MSP_STATUS_EX';
+export interface MSPStatusEx {
   cycleTime: number;
   i2cError: number;
   activeSensors: number;
@@ -48,7 +42,7 @@ interface MSPStatusExMsg {
   configStateFlag: number;
 }
 
-const parseStatusEx = (data: BuffDataView): MSPStatusExMsg => {
+export const parseStatusEx = (data: BuffDataView): MSPStatusEx => {
   const cycleTime = data.readU16();
   const i2cError = data.readU16();
   const activeSensors = data.readU16();
@@ -76,8 +70,6 @@ const parseStatusEx = (data: BuffDataView): MSPStatusExMsg => {
   //   FC.CONFIG.cpuTemp = data.readU16();
   // }
   return {
-    code: MSPCodes.MSP_STATUS_EX,
-    name: 'MSP_STATUS_EX',
     cycleTime,
     i2cError,
     activeSensors,
@@ -95,15 +87,13 @@ const parseStatusEx = (data: BuffDataView): MSPStatusExMsg => {
 /**
  * This structure represents the raw sensor data from the flight controller.
  */
-interface MSPRawImuMsg {
-  code: MSPCodes.MSP_RAW_IMU;
-  name: 'MSP_RAW_IMU';
+export interface MSPRawIMU {
   accelerometer: number[]; //  0.13720703125, -0.0546875, 0.20458984375
   gyroscope: number[]; // -0.48780487804878053, 0.7317073170731708, 0
   magnetometer: number[]; // 0, 0, 0
 }
 
-const parseRawImu = (data: BuffDataView): MSPRawImuMsg => {
+export const parseRawIMU = (data: BuffDataView): MSPRawIMU => {
   // 2048 for mpu6050, 1024 for mma (times 4 since we don't scale in the firmware)
   // currently we are unable to differentiate between the sensor types, so we are going with 2048
   const accelerometer: number[] = [];
@@ -124,71 +114,34 @@ const parseRawImu = (data: BuffDataView): MSPRawImuMsg => {
   magnetometer.push(data.read16());
 
   return {
-    code: MSPCodes.MSP_RAW_IMU,
-    name: 'MSP_RAW_IMU',
     accelerometer,
     gyroscope,
     magnetometer,
   };
 };
 
-/**
- * This structure represents the current servo values.
- * The number of servos is determined by the MSP_SERVO_CONF message.
- * The values are in microseconds, and the range is determined by the MSP_SET_SERVO_CONF message.
- * The first servo is servo 0, the second is servo 1, etc.
- */
-interface MSPServoMsg {
-  code: MSPCodes.MSP_SERVO;
-  name: 'MSP_SERVO';
-  servo: number[]; // 1500, 1500, 1500, 1500, 1500, 1500
-}
-
-const parseServo = (data: BuffDataView): MSPServoMsg => {
+export const parseServo = (data: BuffDataView) => {
   const servo: number[] = [];
   for (let i = 0; i < data.length() / 2; i++) {
     servo.push(data.readU16());
   }
-  return {
-    code: MSPCodes.MSP_SERVO,
-    name: 'MSP_SERVO',
-    servo,
-  };
+  return servo;
 };
 
-/**
- * This structure represents the current motor values.
- * The number of motors is determined by the MSP_MOTOR_CONFIG message.
- * The values are in microseconds, and the range is determined by the MSP_SET_MOTOR_CONFIG message.
- */
-interface MSPMotorMsg {
-  code: MSPCodes.MSP_MOTOR;
-  name: 'MSP_MOTOR';
-  motor: number[]; // 1000, 1000, 1000, 1000, 0, 0, 0, 0
-}
+// MSP_MOTOR
 
-const parseMotor = (data: BuffDataView): MSPMotorMsg => {
+export const parseMotor = (data: BuffDataView) => {
   const motor: number[] = [];
   for (let i = 0; i < data.length() / 2; i++) {
     motor.push(data.readU16());
   }
-  return {
-    code: MSPCodes.MSP_MOTOR,
-    name: 'MSP_MOTOR',
-    motor,
-  };
+  return motor;
 };
 
 // TODO: MSP2_MOTOR_OUTPUT_REORDERING
 // TODO: MSP2_GET_VTX_DEVICE_STATUS
 
-interface MSPMotorTelemetryMsg {
-  code: MSPCodes.MSP_MOTOR_TELEMETRY;
-  name: 'MSP_MOTOR_TELEMETRY';
-  motorTelemetryData: MSPMotorTelemetryData[];
-}
-
-interface MSPMotorTelemetryData {
+export interface MSPMotorTelemetry {
   rpm: number;
   invalidPercent: number;
   temperature: number;
@@ -197,11 +150,11 @@ interface MSPMotorTelemetryData {
   consumption: number;
 }
 
-const parseMotorTelemetry = (data: BuffDataView): MSPMotorTelemetryMsg => {
-  const motorTelemetryData: MSPMotorTelemetryData[] = [];
+export const parseMotorTelemetry = (data: BuffDataView): MSPMotorTelemetry[] => {
+  const motors: MSPMotorTelemetry[] = [];
   const telemMotorCount = data.readU8();
   for (let i = 0; i < telemMotorCount; i++) {
-    motorTelemetryData.push({
+    motors.push({
       rpm: data.readU32(),
       invalidPercent: data.readU16(),
       temperature: data.readU8(),
@@ -210,43 +163,19 @@ const parseMotorTelemetry = (data: BuffDataView): MSPMotorTelemetryMsg => {
       consumption: data.readU16(),
     });
   }
-  return {
-    code: MSPCodes.MSP_MOTOR_TELEMETRY,
-    name: 'MSP_MOTOR_TELEMETRY',
-    motorTelemetryData,
-  };
+  return motors;
 };
 
-/**
- * This structure represents the current RC channel values.
- * The number of channels is determined by the MSP_RC_TUNING message.
- * The values are in microseconds, and the range is determined by the MSP_SET_RC_TUNING message.
- * The first channel is roll, the second is pitch, the third is throttle, the fourth is yaw, and the fifth is aux1.
- * Additional channels are aux2, aux3, aux4, etc.
- */
-interface MSPRCMsg {
-  code: MSPCodes.MSP_RC;
-  name: 'MSP_RC';
-  /**  The current RC channel values.  */
-  channels: number[];
-}
-
-const parseRC = (data: BuffDataView): MSPRCMsg => {
+export const parseRC = (data: BuffDataView) => {
   const activeChannels = data.length() / 2;
   const channels = [];
   for (let i = 0; i < activeChannels; i++) {
     channels.push(data.readU16());
   }
-  return {
-    code: MSPCodes.MSP_RC,
-    name: 'MSP_RC',
-    channels,
-  };
+  return channels;
 };
 
-interface MSPRawGPSMsg {
-  code: MSPCodes.MSP_RAW_GPS;
-  name: 'MSP_RAW_GPS';
+export interface MSPRawGPS {
   fix: number;
   numSat: number;
   lat: number;
@@ -256,9 +185,7 @@ interface MSPRawGPSMsg {
   groundCourse: number;
 }
 
-const parseRawGPS = (data: BuffDataView): MSPRawGPSMsg => ({
-  code: MSPCodes.MSP_RAW_GPS,
-  name: 'MSP_RAW_GPS',
+export const parseRawGPS = (data: BuffDataView): MSPRawGPS => ({
   fix: data.readU8(),
   numSat: data.readU8(),
   lat: data.read32(),
@@ -268,17 +195,13 @@ const parseRawGPS = (data: BuffDataView): MSPRawGPSMsg => ({
   groundCourse: data.readU16(),
 });
 
-interface MSPCompGpsMsg {
-  code: MSPCodes.MSP_COMP_GPS;
-  name: 'MSP_COMP_GPS';
+export interface MSPCompGps {
   distanceToHome: number;
   directionToHome: number;
   update: number;
 }
 
-const parseCompGPS = (data: BuffDataView): MSPCompGpsMsg => ({
-  code: MSPCodes.MSP_COMP_GPS,
-  name: 'MSP_COMP_GPS',
+export const parseCompGPS = (data: BuffDataView): MSPCompGps => ({
   distanceToHome: data.readU16(),
   directionToHome: data.readU16(),
   update: data.readU8(),
@@ -805,57 +728,26 @@ export const composeSetMotor = (motor: number[]): Buffer => {
 // TODO: MSP_BOARD_ALIGNMENT_CONFIG
 // TODO: MSP_SET_REBOOT
 
-export interface MSPApiVersionMsg {
-  code: MSPCodes.MSP_API_VERSION;
-  name: 'MSP_API_VERSION';
-  mspProtocolVersion: number;
-  apiVersion: string;
-}
-
-const parseApiVersion = (data: BuffDataView): MSPApiVersionMsg => ({
-  code: MSPCodes.MSP_API_VERSION,
-  name: 'MSP_API_VERSION',
+export const parseApiVersion = (data: BuffDataView) => ({
   mspProtocolVersion: data.readU8(),
   apiVersion: `${data.readU8()}.${data.readU8()}.0`,
 });
 
-export interface MSPFcVariantMsg {
-  code: MSPCodes.MSP_FC_VARIANT;
-  name: 'MSP_FC_VARIANT';
-  fcVariantIdentifier: string;
-}
-
-const parseFcVariant = (data: BuffDataView): MSPFcVariantMsg => {
+export const parseFcVariant = (data: BuffDataView) => {
   let fcVariantIdentifier = '';
   for (let i = 0; i < 4; i++) {
     fcVariantIdentifier += String.fromCharCode(data.readU8());
   }
   return {
-    code: MSPCodes.MSP_FC_VARIANT,
-    name: 'MSP_FC_VARIANT',
     fcVariantIdentifier,
   };
 };
 
-export interface MSPFcVersionMsg {
-  code: MSPCodes.MSP_FC_VERSION;
-  name: 'MSP_FC_VERSION';
-  flightControllerVersion: string;
-}
-
-const parseFcVersion = (data: BuffDataView): MSPFcVersionMsg => ({
-  code: MSPCodes.MSP_FC_VERSION,
-  name: 'MSP_FC_VERSION',
+export const parseFcVersion = (data: BuffDataView) => ({
   flightControllerVersion: `${data.readU8()}.${data.readU8()}.${data.readU8()}`,
 });
 
-export interface MSPBuildInfoMsg {
-  code: MSPCodes.MSP_BUILD_INFO;
-  name: 'MSP_BUILD_INFO';
-  buildInfo: string;
-}
-
-const parseBuildInfo = (data: BuffDataView): MSPBuildInfoMsg => {
+export const parseBuildInfo = (data: BuffDataView) => {
   const dateLength = 11;
   const buff: number[] = [];
 
@@ -870,15 +762,11 @@ const parseBuildInfo = (data: BuffDataView): MSPBuildInfoMsg => {
   }
 
   return {
-    code: MSPCodes.MSP_BUILD_INFO,
-    name: 'MSP_BUILD_INFO',
     buildInfo: String.fromCharCode.apply(null, buff),
   };
 };
 
-interface MSPBoardInfoMsg {
-  code: MSPCodes.MSP_BOARD_INFO;
-  name: 'MSP_BOARD_INFO';
+export interface MSPBoardInfo {
   boardIdentifier: string;
   boardVersion: number;
   boardType: number;
@@ -890,7 +778,7 @@ interface MSPBoardInfoMsg {
   mcuTypeId: number;
 }
 
-const parseBoardInfo = (data: BuffDataView): MSPBoardInfoMsg => {
+export const parseBoardInfo = (data: BuffDataView): MSPBoardInfo => {
   let boardIdentifier: string = '';
   for (let i = 0; i < 4; i++) {
     boardIdentifier += String.fromCharCode(data.readU8());
@@ -924,8 +812,6 @@ const parseBoardInfo = (data: BuffDataView): MSPBoardInfoMsg => {
   // }
 
   return {
-    code: MSPCodes.MSP_BOARD_INFO,
-    name: 'MSP_BOARD_INFO',
     boardIdentifier,
     boardVersion,
     boardType,
@@ -938,13 +824,7 @@ const parseBoardInfo = (data: BuffDataView): MSPBoardInfoMsg => {
   };
 };
 
-interface MSPNameMsg {
-  code: MSPCodes.MSP_NAME;
-  name: 'MSP_NAME';
-  value: string;
-}
-
-const parseName = (data: BuffDataView): MSPNameMsg => {
+export const parseName = (data: BuffDataView) => {
   let value: string = '';
   let char: number | null;
   for (let i = 0; i < data.length(); i++) {
@@ -955,8 +835,6 @@ const parseName = (data: BuffDataView): MSPNameMsg => {
     value += String.fromCharCode(char);
   }
   return {
-    code: MSPCodes.MSP_NAME,
-    name: 'MSP_NAME',
     value,
   };
 };
@@ -1180,16 +1058,6 @@ const parseSetFailsafeConfig = (data: BuffDataView): MSPSetFailsafeConfigMsg => 
 // TODO: MSP_OSD_CHAR_READ
 // TODO: MSP_OSD_CHAR_WRITE
 
-interface MSPSetNameMsg {
-  code: MSPCodes.MSP_SET_NAME;
-  name: 'MSP_SET_NAME';
-}
-
-const parseSetName = (data: BuffDataView): MSPSetNameMsg => ({
-  code: MSPCodes.MSP_SET_NAME,
-  name: 'MSP_SET_NAME',
-});
-
 export const composeSetName = (name: string): Buffer => {
   let buffer: number[] = [];
   const MSP_BUFFER_SIZE = 64;
@@ -1216,23 +1084,23 @@ export const parseMsg = (code: number, payload: Buffer) => {
 
   switch (code) {
     case MSPCodes.MSP_STATUS:
-      return parseStatus(data);
+      return { code: MSPCodes.MSP_STATUS, name: 'MSP_STATUS', ...parseStatus(data) };
     case MSPCodes.MSP_STATUS_EX:
-      return parseStatusEx(data);
+      return { code: MSPCodes.MSP_STATUS_EX, name: 'MSP_STATUS_EX', ...parseStatusEx(data) };
     case MSPCodes.MSP_RAW_IMU:
-      return parseRawImu(data);
+      return { code: MSPCodes.MSP_RAW_IMU, name: 'MSP_RAW_IMU', ...parseRawIMU(data) };
     case MSPCodes.MSP_SERVO:
-      return parseServo(data);
+      return { code: MSPCodes.MSP_SERVO, name: 'MSP_SERVO', servo: parseServo(data) };
     case MSPCodes.MSP_MOTOR:
-      return parseMotor(data);
+      return { code: MSPCodes.MSP_MOTOR, name: 'MSP_MOTOR', motor: parseMotor(data) };
     case MSPCodes.MSP_MOTOR_TELEMETRY:
-      return parseMotorTelemetry(data);
+      return { code: MSPCodes.MSP_MOTOR_TELEMETRY, name: 'MSP_MOTOR_TELEMETRY', motorTelemetry: parseMotorTelemetry(data) };
     case MSPCodes.MSP_RC:
-      return parseRC(data);
+      return { code: MSPCodes.MSP_RC, name: 'MSP_RC', channels: parseRC(data) };
     case MSPCodes.MSP_RAW_GPS:
-      return parseRawGPS(data);
+      return { code: MSPCodes.MSP_RAW_GPS, name: 'MSP_RAW_GPS', ...parseRawGPS(data) };
     case MSPCodes.MSP_COMP_GPS:
-      return parseCompGPS(data);
+      return { code: MSPCodes.MSP_COMP_GPS, name: 'MSP_COMP_GPS', ...parseCompGPS(data) };
     case MSPCodes.MSP_ATTITUDE:
       return parseAttitude(data);
     case MSPCodes.MSP_ALTITUDE:
@@ -1328,19 +1196,19 @@ export const parseMsg = (code: number, payload: Buffer) => {
     case MSPCodes.MSP_SET_FAILSAFE_CONFIG:
       return parseSetFailsafeConfig(data);
     case MSPCodes.MSP_SET_NAME:
-      return parseSetName(data);
+      return { code: MSPCodes.MSP_SET_NAME, name: 'MSP_SET_NAME' };
     case MSPCodes.MSP_API_VERSION:
-      return parseApiVersion(data);
+      return { code: MSPCodes.MSP_API_VERSION, name: 'MSP_API_VERSION', ...parseApiVersion(data) };
     case MSPCodes.MSP_FC_VARIANT:
-      return parseFcVariant(data);
+      return { code: MSPCodes.MSP_FC_VARIANT, name: 'MSP_FC_VARIANT', ...parseFcVariant(data) };
     case MSPCodes.MSP_FC_VERSION:
-      return parseFcVersion(data);
+      return { code: MSPCodes.MSP_FC_VERSION, name: 'MSP_FC_VERSION', ...parseFcVersion(data) };
     case MSPCodes.MSP_BUILD_INFO:
-      return parseBuildInfo(data);
+      return { code: MSPCodes.MSP_BUILD_INFO, name: 'MSP_BUILD_INFO', ...parseBuildInfo(data) };
     case MSPCodes.MSP_BOARD_INFO:
-      return parseBoardInfo(data);
+      return { code: MSPCodes.MSP_BOARD_INFO, name: 'MSP_BOARD_INFO', ...parseBoardInfo(data) };
     case MSPCodes.MSP_NAME:
-      return parseName(data);
+      return { code: MSPCodes.MSP_NAME, name: 'MSP_NAME', ...parseName(data) };
   }
   throw new Error(`Unknown MSP code: ${code}`);
 };

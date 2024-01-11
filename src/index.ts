@@ -1,8 +1,28 @@
-import { SerialPort } from 'serialport';
-import { composeSetMotor, composeSetName, parseMsg } from './msg';
-import { encodeMessageV1, encodeMessageV2, push8 } from './utils';
 import { EventEmitter } from 'events';
+import { SerialPort } from 'serialport';
+
 import { MSPCodes } from './codes';
+import {
+  composeSetMotor,
+  composeSetName,
+  parseApiVersion,
+  parseBoardInfo,
+  parseBuildInfo,
+  parseCompGPS,
+  parseFcVariant,
+  parseFcVersion,
+  parseMotor,
+  parseMotorTelemetry,
+  parseMsg,
+  parseName,
+  parseRC,
+  parseRawGPS,
+  parseRawIMU,
+  parseServo,
+  parseStatus,
+  parseStatusEx,
+} from './msg';
+import { BuffDataView, buffToDataView, encodeMessageV1, encodeMessageV2 } from './utils';
 
 interface MultiwiiSerialProtocolOpts {
   path: string;
@@ -13,7 +33,7 @@ interface MultiwiiSerialProtocolOpts {
 interface MultiwiiCommandCallback {
   code: MSPCodes;
   timeout: NodeJS.Timeout;
-  resolve: (data: Buffer) => void;
+  resolve: (data: BuffDataView) => void;
   reject: (err: Error) => void;
 }
 
@@ -73,7 +93,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
       if (callback.code === code) {
         clearTimeout(callback.timeout);
         this.callbacks.splice(i, 1);
-        callback.resolve(payload);
+        callback.resolve(buffToDataView(payload));
       }
     }
   }
@@ -101,7 +121,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     const bufferOut = code <= 254 ? encodeMessageV1(code, payload) : encodeMessageV2(code, payload);
     await this.port.write(bufferOut);
 
-    return new Promise<Buffer>((resolve, reject) => {
+    return new Promise<BuffDataView>((resolve, reject) => {
       this.callbacks.push({
         code,
         resolve,
@@ -113,24 +133,89 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     });
   }
 
-  public async getName() {
-    const payload = await this.sendMessage(MSPCodes.MSP_NAME);
-    const msg = parseMsg(MSPCodes.MSP_NAME, payload);
-    return msg.code === MSPCodes.MSP_NAME ? msg.value : '';
+  // MSP_STATUS
+  public async getStatus() {
+    return parseStatus(await this.sendMessage(MSPCodes.MSP_STATUS));
   }
 
-  public async setName(name: string) {
-    await this.sendMessage(MSPCodes.MSP_SET_NAME, composeSetName(name));
+  // MSP_STATUS_EX
+  public async getStatusEx() {
+    return parseStatusEx(await this.sendMessage(MSPCodes.MSP_STATUS_EX));
   }
 
+  // MSP_RAW_IMU
+  public async getRawIMU() {
+    return parseRawIMU(await this.sendMessage(MSPCodes.MSP_RAW_IMU));
+  }
+
+  // MSP_SERVO
+  public async getServo() {
+    return parseServo(await this.sendMessage(MSPCodes.MSP_SERVO));
+  }
+
+  // MSP_MOTOR
   public async getMotor() {
-    const payload = await this.sendMessage(MSPCodes.MSP_MOTOR);
-    const msg = parseMsg(MSPCodes.MSP_MOTOR, payload);
-    return msg.code === MSPCodes.MSP_MOTOR ? msg.motor : [];
+    return parseMotor(await this.sendMessage(MSPCodes.MSP_MOTOR));
   }
 
+  // MSP_SET_MOTOR
   public async setMotor(motor: number[]) {
     await this.sendMessage(MSPCodes.MSP_SET_MOTOR, composeSetMotor(motor));
+  }
+
+  // MSP_MOTOR_TELEMETRY
+  public async getMotorTelemetry() {
+    return parseMotorTelemetry(await this.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY));
+  }
+
+  // MSP_RC
+  public async getRc() {
+    return parseRC(await this.sendMessage(MSPCodes.MSP_RC));
+  }
+
+  // MSP_RAW_GPS
+  public async getRawGPS() {
+    return parseRawGPS(await this.sendMessage(MSPCodes.MSP_RAW_GPS));
+  }
+
+  // MSP_COMP_GPS
+  public async getCompGPS() {
+    return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
+  }
+
+  // MSP_API_VERSION
+  public async getApiVersion() {
+    return parseApiVersion(await this.sendMessage(MSPCodes.MSP_API_VERSION));
+  }
+
+  // MSP_FC_VARIANT
+  public async getFcVariant() {
+    return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT)).fcVariantIdentifier;
+  }
+
+  // MSP_FC_VERSION
+  public async getFcVersion() {
+    return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION)).flightControllerVersion;
+  }
+
+  // MSP_BUILD_INFO
+  public async getBuildInfo() {
+    return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO)).buildInfo;
+  }
+
+  // MSP_BOARD_INFO
+  public async getBoardInfo() {
+    return parseBoardInfo(await this.sendMessage(MSPCodes.MSP_BOARD_INFO));
+  }
+
+  // MSP_NAME
+  public async getName() {
+    return parseName(await this.sendMessage(MSPCodes.MSP_NAME)).value;
+  }
+
+  // MSP_SET_NAME
+  public async setName(name: string) {
+    await this.sendMessage(MSPCodes.MSP_SET_NAME, composeSetName(name));
   }
 }
 
