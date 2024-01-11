@@ -128,8 +128,6 @@ export const parseServo = (data: BuffDataView) => {
   return servo;
 };
 
-// MSP_MOTOR
-
 export const parseMotor = (data: BuffDataView) => {
   const motor: number[] = [];
   for (let i = 0; i < data.length() / 2; i++) {
@@ -207,58 +205,24 @@ export const parseCompGPS = (data: BuffDataView): MSPCompGps => ({
   update: data.readU8(),
 });
 
-interface MSPAttitudeMsg {
-  code: MSPCodes.MSP_ATTITUDE;
-  name: 'MSP_ATTITUDE';
-  kinematics: number[];
-}
+export const parseAttitude = (data: BuffDataView) => [
+  data.read16() / 10, // x
+  data.read16() / 10, // y
+  data.read16() / 10, // z
+];
 
-const parseAttitude = (data: BuffDataView): MSPAttitudeMsg => ({
-  code: MSPCodes.MSP_ATTITUDE,
-  name: 'MSP_ATTITUDE',
-  kinematics: [
-    data.read16() / 10, // x
-    data.read16() / 10, // y
-    data.read16() / 10, // z
-  ],
-});
+export const parseAltitude = (data: BuffDataView) => parseFloat((data.read32() / 100.0).toFixed(2)); // correct scale factor;
 
-interface MSPAltitudeMsg {
-  code: MSPCodes.MSP_ALTITUDE;
-  name: 'MSP_ALTITUDE';
-  altitude: number;
-}
+export const parseSonar = (data: BuffDataView) => data.read32();
 
-const parseAltitude = (data: BuffDataView): MSPAltitudeMsg => ({
-  code: MSPCodes.MSP_ALTITUDE,
-  name: 'MSP_ALTITUDE',
-  altitude: parseFloat((data.read32() / 100.0).toFixed(2)), // correct scale factor
-});
-
-interface MSPSonarMsg {
-  code: MSPCodes.MSP_SONAR;
-  name: 'MSP_SONAR';
-  sonar: number;
-}
-
-const parseSonar = (data: BuffDataView): MSPSonarMsg => ({
-  code: MSPCodes.MSP_SONAR,
-  name: 'MSP_SONAR',
-  sonar: data.read32(),
-});
-
-interface MSPAnalogMsg {
-  code: MSPCodes.MSP_ANALOG;
-  name: 'MSP_ANALOG';
+export interface MSPAnalog {
   voltage: number;
   mAhdrawn: number;
   rssi: number;
   amperage: number;
 }
 
-const parseAnalog = (data: BuffDataView): MSPAnalogMsg => ({
-  code: MSPCodes.MSP_ANALOG,
-  name: 'MSP_ANALOG',
+export const parseAnalog = (data: BuffDataView): MSPAnalog => ({
   voltage: data.readU8() / 10.0,
   mAhdrawn: data.readU16(),
   rssi: data.readU16(), // 0-1023
@@ -266,18 +230,12 @@ const parseAnalog = (data: BuffDataView): MSPAnalogMsg => ({
   // FC.ANALOG.voltage = data.readU16() / 100; ???
 });
 
-interface MSPVoltageMetersMsg {
-  code: MSPCodes.MSP_VOLTAGE_METERS;
-  name: 'MSP_VOLTAGE_METERS';
-  voltageMeters: MSPVoltageMeter[];
-}
-
-interface MSPVoltageMeter {
+export interface MSPVoltageMeter {
   id: number;
   voltage: number;
 }
 
-const parseVoltageMeters = (data: BuffDataView): MSPVoltageMetersMsg => {
+export const parseVoltageMeters = (data: BuffDataView): MSPVoltageMeter[] => {
   const voltageMeters: MSPVoltageMeter[] = [];
   const voltageMeterLength = 2;
   for (let i = 0; i < data.length() / voltageMeterLength; i++) {
@@ -287,26 +245,16 @@ const parseVoltageMeters = (data: BuffDataView): MSPVoltageMetersMsg => {
     };
     voltageMeters.push(voltageMeter);
   }
-  return {
-    code: MSPCodes.MSP_VOLTAGE_METERS,
-    name: 'MSP_VOLTAGE_METERS',
-    voltageMeters,
-  };
+  return voltageMeters;
 };
 
-interface MSPCurrentMetersMsg {
-  code: MSPCodes.MSP_CURRENT_METERS;
-  name: 'MSP_CURRENT_METERS';
-  currentMeters: MSPCurrentMeter[];
-}
-
-interface MSPCurrentMeter {
+export interface MSPCurrentMeter {
   id: number;
   mAhDrawn: number;
   amperage: number;
 }
 
-const parseCurrentMeters = (data: BuffDataView): MSPCurrentMetersMsg => {
+export const parseCurrentMeters = (data: BuffDataView) => {
   const currentMeters: MSPCurrentMeter[] = [];
   const currentMeterLength = 5;
   for (let i = 0; i < data.length() / currentMeterLength; i++) {
@@ -316,16 +264,10 @@ const parseCurrentMeters = (data: BuffDataView): MSPCurrentMetersMsg => {
       amperage: data.readU16() / 1000,
     });
   }
-  return {
-    code: MSPCodes.MSP_CURRENT_METERS,
-    name: 'MSP_CURRENT_METERS',
-    currentMeters,
-  };
+  return currentMeters;
 };
 
-interface MSPBatteryStateMsg {
-  code: MSPCodes.MSP_BATTERY_STATE;
-  name: 'MSP_BATTERY_STATE';
+export interface MSPBatteryState {
   cellCount: number;
   capacity: number;
   voltage: number;
@@ -334,9 +276,7 @@ interface MSPBatteryStateMsg {
   batteryState: number;
 }
 
-const parseBatteryState = (data: BuffDataView): MSPBatteryStateMsg => ({
-  code: MSPCodes.MSP_BATTERY_STATE,
-  name: 'MSP_BATTERY_STATE',
+export const parseBatteryState = (data: BuffDataView): MSPBatteryState => ({
   cellCount: data.readU8(),
   capacity: data.readU16(),
   voltage: data.readU8() / 10.0,
@@ -346,13 +286,7 @@ const parseBatteryState = (data: BuffDataView): MSPBatteryStateMsg => ({
   // FC.BATTERY_STATE.voltage = data.readU16() / 100; ???
 });
 
-interface MSPVoltageMeterConfigMsg {
-  code: MSPCodes.MSP_VOLTAGE_METER_CONFIG;
-  name: 'MSP_VOLTAGE_METER_CONFIG';
-  voltageMeterConfigs: MSPVoltageMeterConfig[];
-}
-
-interface MSPVoltageMeterConfig {
+export interface MSPVoltageMeterConfig {
   id: number;
   sensorType: number;
   vbatscale: number;
@@ -360,7 +294,7 @@ interface MSPVoltageMeterConfig {
   vbatresdivmultiplier: number;
 }
 
-const parseVoltageMeterConfig = (data: BuffDataView): MSPVoltageMeterConfigMsg => {
+export const parseVoltageMeterConfig = (data: BuffDataView): MSPVoltageMeterConfig[] => {
   const voltageMeterConfigs: MSPVoltageMeterConfig[] = [];
   const voltageMeterCount = data.readU8();
 
@@ -381,27 +315,17 @@ const parseVoltageMeterConfig = (data: BuffDataView): MSPVoltageMeterConfigMsg =
     }
   }
 
-  return {
-    code: MSPCodes.MSP_VOLTAGE_METER_CONFIG,
-    name: 'MSP_VOLTAGE_METER_CONFIG',
-    voltageMeterConfigs,
-  };
+  return voltageMeterConfigs;
 };
 
-interface MSPCurrentMeterConfigMsg {
-  code: MSPCodes.MSP_CURRENT_METER_CONFIG;
-  name: 'MSP_CURRENT_METER_CONFIG';
-  currentMeterConfigs: MSPCurrentMeterConfig[];
-}
-
-interface MSPCurrentMeterConfig {
+export interface MSPCurrentMeterConfig {
   id: number;
   sensorType: number;
   scale: number;
   offset: number;
 }
 
-const parseCurrentMeterConfig = (data: BuffDataView): MSPCurrentMeterConfigMsg => {
+export const parseCurrentMeterConfig = (data: BuffDataView): MSPCurrentMeterConfig[] => {
   const currentMeterConfigs: MSPCurrentMeterConfig[] = [];
   const currentMeterCount = data.readU8();
 
@@ -422,16 +346,10 @@ const parseCurrentMeterConfig = (data: BuffDataView): MSPCurrentMeterConfigMsg =
     }
   }
 
-  return {
-    code: MSPCodes.MSP_CURRENT_METER_CONFIG,
-    name: 'MSP_CURRENT_METER_CONFIG',
-    currentMeterConfigs,
-  };
+  return currentMeterConfigs;
 };
 
-interface MSPBatteryConfigMsg {
-  code: MSPCodes.MSP_BATTERY_CONFIG;
-  name: 'MSP_BATTERY_CONFIG';
+export interface MSPBatteryConfig {
   vbatmincellvoltage: number;
   vbatmaxcellvoltage: number;
   vbatwarningcellvoltage: number;
@@ -440,9 +358,7 @@ interface MSPBatteryConfigMsg {
   currentMeterSource: number;
 }
 
-const parseBatteryConfig = (data: BuffDataView): MSPBatteryConfigMsg => ({
-  code: MSPCodes.MSP_BATTERY_CONFIG,
-  name: 'MSP_BATTERY_CONFIG',
+export const parseBatteryConfig = (data: BuffDataView): MSPBatteryConfig => ({
   vbatmincellvoltage: data.readU8() / 10,
   vbatmaxcellvoltage: data.readU8() / 10,
   vbatwarningcellvoltage: data.readU8() / 10,
@@ -454,25 +370,13 @@ const parseBatteryConfig = (data: BuffDataView): MSPBatteryConfigMsg => ({
   // FC.BATTERY_CONFIG.vbatwarningcellvoltage = data.readU16() / 100; ???
 });
 
-export interface MSPSetBatteryConfigMsg {
-  code: MSPCodes.MSP_SET_BATTERY_CONFIG;
-  name: 'MSP_SET_BATTERY_CONFIG';
-}
-
-const parseSetBatteryConfig = (data: BuffDataView): MSPSetBatteryConfigMsg => ({
-  code: MSPCodes.MSP_SET_BATTERY_CONFIG,
-  name: 'MSP_SET_BATTERY_CONFIG',
-});
-
 // TODO: MSP_RC_TUNING
 // TODO: MSP_PID
 // TODO: MSP_ARMING_CONFIG
 // TODO: MSP_LOOP_TIME
 // TODO: MSP_MISC
 
-interface MSPMotorConfigMsg {
-  code: MSPCodes.MSP_MOTOR_CONFIG;
-  name: 'MSP_MOTOR_CONFIG';
+export interface MSPMotorConfig {
   minthrottle: number;
   maxthrottle: number;
   mincommand: number;
@@ -482,10 +386,8 @@ interface MSPMotorConfigMsg {
   useEscSensor?: boolean;
 }
 
-const parseMotorConfig = (data: BuffDataView): MSPMotorConfigMsg => {
-  const msg: MSPMotorConfigMsg = {
-    code: MSPCodes.MSP_MOTOR_CONFIG,
-    name: 'MSP_MOTOR_CONFIG',
+export const parseMotorConfig = (data: BuffDataView): MSPMotorConfig => {
+  const msg: MSPMotorConfig = {
     minthrottle: data.readU16(),
     maxthrottle: data.readU16(),
     mincommand: data.readU16(),
@@ -515,198 +417,7 @@ const parseMotorConfig = (data: BuffDataView): MSPMotorConfigMsg => {
 // TODO: MSP_SERVO_CONFIGURATIONS
 // TODO: MSP_RC_DEADBAND
 // TODO: MSP_SENSOR_ALIGNMENT
-
-export interface MSPDisplayPortMsg {
-  code: MSPCodes.MSP_DISPLAYPORT;
-  name: 'MSP_DISPLAYPORT';
-}
-
-const parseDisplayPort = (data: BuffDataView): MSPDisplayPortMsg => ({
-  code: MSPCodes.MSP_DISPLAYPORT,
-  name: 'MSP_DISPLAYPORT',
-});
-
-export interface MSPSetRawRCMsg {
-  code: MSPCodes.MSP_SET_RAW_RC;
-  name: 'MSP_SET_RAW_RC';
-}
-
-const parseSetRawRC = (data: BuffDataView): MSPSetRawRCMsg => ({
-  code: MSPCodes.MSP_SET_RAW_RC,
-  name: 'MSP_SET_RAW_RC',
-});
-
-export interface MSPSetPIDMsg {
-  code: MSPCodes.MSP_SET_PID;
-  name: 'MSP_SET_PID';
-}
-
-const parseSetPID = (data: BuffDataView): MSPSetPIDMsg => ({
-  code: MSPCodes.MSP_SET_PID,
-  name: 'MSP_SET_PID',
-});
-
-export interface MSPSetRCTuningMsg {
-  code: MSPCodes.MSP_SET_RC_TUNING;
-  name: 'MSP_SET_RC_TUNING';
-}
-
-const parseSetRCTuning = (data: BuffDataView): MSPSetRCTuningMsg => ({
-  code: MSPCodes.MSP_SET_RC_TUNING,
-  name: 'MSP_SET_RC_TUNING',
-});
-
-export interface MSPAccCalibrationMsg {
-  code: MSPCodes.MSP_ACC_CALIBRATION;
-  name: 'MSP_ACC_CALIBRATION';
-}
-
-const parseAccCalibration = (data: BuffDataView): MSPAccCalibrationMsg => ({
-  code: MSPCodes.MSP_ACC_CALIBRATION,
-  name: 'MSP_ACC_CALIBRATION',
-});
-
-export interface MSPMagCalibrationMsg {
-  code: MSPCodes.MSP_MAG_CALIBRATION;
-  name: 'MSP_MAG_CALIBRATION';
-}
-
-const parseMagCalibration = (data: BuffDataView): MSPMagCalibrationMsg => ({
-  code: MSPCodes.MSP_MAG_CALIBRATION,
-  name: 'MSP_MAG_CALIBRATION',
-});
-
-export interface MSPSetMotorConfigMsg {
-  code: MSPCodes.MSP_SET_MOTOR_CONFIG;
-  name: 'MSP_SET_MOTOR_CONFIG';
-}
-
-const parseSetMotorConfig = (data: BuffDataView): MSPSetMotorConfigMsg => ({
-  code: MSPCodes.MSP_SET_MOTOR_CONFIG,
-  name: 'MSP_SET_MOTOR_CONFIG',
-});
-
-export interface MSPSetGPSConfigMsg {
-  code: MSPCodes.MSP_SET_GPS_CONFIG;
-  name: 'MSP_SET_GPS_CONFIG';
-}
-
-const parseSetGPSConfig = (data: BuffDataView): MSPSetGPSConfigMsg => ({
-  code: MSPCodes.MSP_SET_GPS_CONFIG,
-  name: 'MSP_SET_GPS_CONFIG',
-});
-
-export interface MSPSetGPSRescueMsg {
-  code: MSPCodes.MSP_SET_GPS_RESCUE;
-  name: 'MSP_SET_GPS_RESCUE';
-}
-
-const parseSetGPSRescue = (data: BuffDataView): MSPSetGPSRescueMsg => ({
-  code: MSPCodes.MSP_SET_GPS_RESCUE,
-  name: 'MSP_SET_GPS_RESCUE',
-});
-
-export interface MSPSetRSSIConfigMsg {
-  code: MSPCodes.MSP_SET_RSSI_CONFIG;
-  name: 'MSP_SET_RSSI_CONFIG';
-}
-
-const parseSetRSSIConfig = (data: BuffDataView): MSPSetRSSIConfigMsg => ({
-  code: MSPCodes.MSP_SET_RSSI_CONFIG,
-  name: 'MSP_SET_RSSI_CONFIG',
-});
-
-export interface MSPSetFeatureConfigMsg {
-  code: MSPCodes.MSP_SET_FEATURE_CONFIG;
-  name: 'MSP_SET_FEATURE_CONFIG';
-}
-
-const parseSetFeatureConfig = (data: BuffDataView): MSPSetFeatureConfigMsg => ({
-  code: MSPCodes.MSP_SET_FEATURE_CONFIG,
-  name: 'MSP_SET_FEATURE_CONFIG',
-});
-
-export interface MSPSetBeeperConfigMsg {
-  code: MSPCodes.MSP_SET_BEEPER_CONFIG;
-  name: 'MSP_SET_BEEPER_CONFIG';
-}
-
-const parseSetBeeperConfig = (data: BuffDataView): MSPSetBeeperConfigMsg => ({
-  code: MSPCodes.MSP_SET_BEEPER_CONFIG,
-  name: 'MSP_SET_BEEPER_CONFIG',
-});
-
-export interface MSPResetConfMsg {
-  code: MSPCodes.MSP_RESET_CONF;
-  name: 'MSP_RESET_CONF';
-}
-
-const parseResetConf = (data: BuffDataView): MSPResetConfMsg => ({
-  code: MSPCodes.MSP_RESET_CONF,
-  name: 'MSP_RESET_CONF',
-});
-
-export interface MSPSelectSettingMsg {
-  code: MSPCodes.MSP_SELECT_SETTING;
-  name: 'MSP_SELECT_SETTING';
-}
-
-const parseSelectSetting = (data: BuffDataView): MSPSelectSettingMsg => ({
-  code: MSPCodes.MSP_SELECT_SETTING,
-  name: 'MSP_SELECT_SETTING',
-});
-
-export interface MSPSetServoConfigurationMsg {
-  code: MSPCodes.MSP_SET_SERVO_CONFIGURATION;
-  name: 'MSP_SET_SERVO_CONFIGURATION';
-}
-
-const parseSetServoConfiguration = (data: BuffDataView): MSPSetServoConfigurationMsg => ({
-  code: MSPCodes.MSP_SET_SERVO_CONFIGURATION,
-  name: 'MSP_SET_SERVO_CONFIGURATION',
-});
-
-export interface MSPEepromWriteMsg {
-  code: MSPCodes.MSP_EEPROM_WRITE;
-  name: 'MSP_EEPROM_WRITE';
-}
-
-const parseEepromWrite = (data: BuffDataView): MSPEepromWriteMsg => ({
-  code: MSPCodes.MSP_EEPROM_WRITE,
-  name: 'MSP_EEPROM_WRITE',
-});
-
-export interface MSPSetCurrentMeterConfigMsg {
-  code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG;
-  name: 'MSP_SET_CURRENT_METER_CONFIG';
-}
-
-const parseSetCurrentMeterConfig = (data: BuffDataView): MSPSetCurrentMeterConfigMsg => ({
-  code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG,
-  name: 'MSP_SET_CURRENT_METER_CONFIG',
-});
-
-export interface MSPSetVoltageMeterConfigMsg {
-  code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG;
-  name: 'MSP_SET_VOLTAGE_METER_CONFIG';
-}
-
-const parseSetVoltageMeterConfig = (data: BuffDataView): MSPSetVoltageMeterConfigMsg => ({
-  code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG,
-  name: 'MSP_SET_VOLTAGE_METER_CONFIG',
-});
-
 // TODO: MSP_DEBUG
-
-export interface MSPSetMotorMsg {
-  code: MSPCodes.MSP_SET_MOTOR;
-  name: 'MSP_SET_MOTOR';
-}
-
-const parseSetMotor = (data: BuffDataView): MSPSetMotorMsg => ({
-  code: MSPCodes.MSP_SET_MOTOR,
-  name: 'MSP_SET_MOTOR',
-});
 
 export const composeSetMotor = (motor: number[]): Buffer => {
   let buffer: number[] = [];
@@ -1099,67 +810,75 @@ export const parseMsg = (code: number, payload: Buffer) => {
     case MSPCodes.MSP_COMP_GPS:
       return { code: MSPCodes.MSP_COMP_GPS, name: 'MSP_COMP_GPS', ...parseCompGPS(data) };
     case MSPCodes.MSP_ATTITUDE:
-      return parseAttitude(data);
+      return { code: MSPCodes.MSP_ATTITUDE, name: 'MSP_ATTITUDE', kinematics: parseAttitude(data) };
     case MSPCodes.MSP_ALTITUDE:
-      return parseAltitude(data);
+      return { code: MSPCodes.MSP_ALTITUDE, name: 'MSP_ALTITUDE', altitude: parseAltitude(data) };
     case MSPCodes.MSP_SONAR:
-      return parseSonar(data);
+      return { code: MSPCodes.MSP_SONAR, name: 'MSP_SONAR', sonar: parseSonar(data) };
     case MSPCodes.MSP_ANALOG:
-      return parseAnalog(data);
+      return { code: MSPCodes.MSP_ANALOG, name: 'MSP_ANALOG', ...parseAnalog(data) };
     case MSPCodes.MSP_VOLTAGE_METERS:
-      return parseVoltageMeters(data);
+      return { code: MSPCodes.MSP_VOLTAGE_METERS, name: 'MSP_VOLTAGE_METERS', voltageMeters: parseVoltageMeters(data) };
     case MSPCodes.MSP_CURRENT_METERS:
-      return parseCurrentMeters(data);
+      return { code: MSPCodes.MSP_CURRENT_METERS, name: 'MSP_CURRENT_METERS', currentMeters: parseCurrentMeters(data) };
     case MSPCodes.MSP_BATTERY_STATE:
-      return parseBatteryState(data);
+      return { code: MSPCodes.MSP_BATTERY_STATE, name: 'MSP_BATTERY_STATE', ...parseBatteryState(data) };
     case MSPCodes.MSP_VOLTAGE_METER_CONFIG:
-      return parseVoltageMeterConfig(data);
+      return {
+        code: MSPCodes.MSP_VOLTAGE_METER_CONFIG,
+        name: 'MSP_VOLTAGE_METER_CONFIG',
+        voltageMeterConfigs: parseVoltageMeterConfig(data),
+      };
     case MSPCodes.MSP_CURRENT_METER_CONFIG:
-      return parseCurrentMeterConfig(data);
+      return {
+        code: MSPCodes.MSP_CURRENT_METER_CONFIG,
+        name: 'MSP_CURRENT_METER_CONFIG',
+        currentMeterConfigs: parseCurrentMeterConfig(data),
+      };
     case MSPCodes.MSP_BATTERY_CONFIG:
-      return parseBatteryConfig(data);
+      return { code: MSPCodes.MSP_BATTERY_CONFIG, name: 'MSP_BATTERY_CONFIG', ...parseBatteryConfig(data) };
     case MSPCodes.MSP_SET_BATTERY_CONFIG:
-      return parseSetBatteryConfig(data);
+      return { code: MSPCodes.MSP_SET_BATTERY_CONFIG, name: 'MSP_SET_BATTERY_CONFIG' };
     case MSPCodes.MSP_MOTOR_CONFIG:
-      return parseMotorConfig(data);
+      return { code: MSPCodes.MSP_MOTOR_CONFIG, name: 'MSP_MOTOR_CONFIG', ...parseMotorConfig(data) };
     case MSPCodes.MSP_DISPLAYPORT:
-      return parseDisplayPort(data);
+      return { code: MSPCodes.MSP_DISPLAYPORT, name: 'MSP_DISPLAYPORT' };
     case MSPCodes.MSP_SET_RAW_RC:
-      return parseSetRawRC(data);
+      return { code: MSPCodes.MSP_SET_RAW_RC, name: 'MSP_SET_RAW_RC' };
     case MSPCodes.MSP_SET_PID:
-      return parseSetPID(data);
+      return { code: MSPCodes.MSP_SET_PID, name: 'MSP_SET_PID' };
     case MSPCodes.MSP_SET_RC_TUNING:
-      return parseSetRCTuning(data);
+      return { code: MSPCodes.MSP_SET_RC_TUNING, name: 'MSP_SET_RC_TUNING' };
     case MSPCodes.MSP_ACC_CALIBRATION:
-      return parseAccCalibration(data);
+      return { code: MSPCodes.MSP_ACC_CALIBRATION, name: 'MSP_ACC_CALIBRATION' };
     case MSPCodes.MSP_MAG_CALIBRATION:
-      return parseMagCalibration(data);
+      return { code: MSPCodes.MSP_MAG_CALIBRATION, name: 'MSP_MAG_CALIBRATION' };
     case MSPCodes.MSP_SET_MOTOR_CONFIG:
-      return parseSetMotorConfig(data);
+      return { code: MSPCodes.MSP_SET_MOTOR_CONFIG, name: 'MSP_SET_MOTOR_CONFIG' };
     case MSPCodes.MSP_SET_GPS_CONFIG:
-      return parseSetGPSConfig(data);
+      return { code: MSPCodes.MSP_SET_GPS_CONFIG, name: 'MSP_SET_GPS_CONFIG' };
     case MSPCodes.MSP_SET_GPS_RESCUE:
-      return parseSetGPSRescue(data);
+      return { code: MSPCodes.MSP_SET_GPS_RESCUE, name: 'MSP_SET_GPS_RESCUE' };
     case MSPCodes.MSP_SET_RSSI_CONFIG:
-      return parseSetRSSIConfig(data);
+      return { code: MSPCodes.MSP_SET_RSSI_CONFIG, name: 'MSP_SET_RSSI_CONFIG' };
     case MSPCodes.MSP_SET_FEATURE_CONFIG:
-      return parseSetFeatureConfig(data);
+      return { code: MSPCodes.MSP_SET_FEATURE_CONFIG, name: 'MSP_SET_FEATURE_CONFIG' };
     case MSPCodes.MSP_SET_BEEPER_CONFIG:
-      return parseSetBeeperConfig(data);
+      return { code: MSPCodes.MSP_SET_BEEPER_CONFIG, name: 'MSP_SET_BEEPER_CONFIG' };
     case MSPCodes.MSP_RESET_CONF:
-      return parseResetConf(data);
+      return { code: MSPCodes.MSP_RESET_CONF, name: 'MSP_RESET_CONF' };
     case MSPCodes.MSP_SELECT_SETTING:
-      return parseSelectSetting(data);
+      return { code: MSPCodes.MSP_SELECT_SETTING, name: 'MSP_SELECT_SETTING' };
     case MSPCodes.MSP_SET_SERVO_CONFIGURATION:
-      return parseSetServoConfiguration(data);
+      return { code: MSPCodes.MSP_SET_SERVO_CONFIGURATION, name: 'MSP_SET_SERVO_CONFIGURATION' };
     case MSPCodes.MSP_EEPROM_WRITE:
-      return parseEepromWrite(data);
+      return { code: MSPCodes.MSP_EEPROM_WRITE, name: 'MSP_EEPROM_WRITE' };
     case MSPCodes.MSP_SET_CURRENT_METER_CONFIG:
-      return parseSetCurrentMeterConfig(data);
+      return { code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG, name: 'MSP_SET_CURRENT_METER_CONFIG' };
     case MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG:
-      return parseSetVoltageMeterConfig(data);
+      return { code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG, name: 'MSP_SET_VOLTAGE_METER_CONFIG' };
     case MSPCodes.MSP_SET_MOTOR:
-      return parseSetMotor(data);
+      return { code: MSPCodes.MSP_SET_MOTOR, name: 'MSP_SET_MOTOR' };
     case MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL:
       return parseSetVtxTablePowerLevel(data);
     case MSPCodes.MSP_SET_MODE_RANGE:

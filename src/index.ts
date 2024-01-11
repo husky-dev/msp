@@ -5,22 +5,33 @@ import { MSPCodes } from './codes';
 import {
   composeSetMotor,
   composeSetName,
+  parseAltitude,
+  parseAnalog,
   parseApiVersion,
+  parseAttitude,
+  parseBatteryConfig,
+  parseBatteryState,
   parseBoardInfo,
   parseBuildInfo,
   parseCompGPS,
+  parseCurrentMeterConfig,
+  parseCurrentMeters,
   parseFcVariant,
   parseFcVersion,
   parseMotor,
+  parseMotorConfig,
   parseMotorTelemetry,
   parseMsg,
   parseName,
-  parseRC,
   parseRawGPS,
   parseRawIMU,
+  parseRC,
   parseServo,
+  parseSonar,
   parseStatus,
   parseStatusEx,
+  parseVoltageMeterConfig,
+  parseVoltageMeters,
 } from './msg';
 import { BuffDataView, buffToDataView, encodeMessageV1, encodeMessageV2 } from './utils';
 
@@ -182,6 +193,82 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   public async getCompGPS() {
     return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
   }
+
+  // MSP_ATTITUDE
+  public async getAttitude() {
+    return parseAttitude(await this.sendMessage(MSPCodes.MSP_ATTITUDE));
+  }
+
+  // MSP_ALTITUDE
+  public async getAltitude() {
+    return parseAltitude(await this.sendMessage(MSPCodes.MSP_ALTITUDE));
+  }
+
+  // MSP_SONAR
+  public async getSonar() {
+    return parseSonar(await this.sendMessage(MSPCodes.MSP_SONAR));
+  }
+
+  // MSP_ANALOG
+  public async getAnalog() {
+    return parseAnalog(await this.sendMessage(MSPCodes.MSP_ANALOG));
+  }
+
+  // MSP_VOLTAGE_METERS
+  public async getVoltageMeters() {
+    return parseVoltageMeters(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METERS));
+  }
+
+  // MSP_CURRENT_METERS
+  public async getCurrentMeters() {
+    return parseCurrentMeters(await this.sendMessage(MSPCodes.MSP_CURRENT_METERS));
+  }
+
+  // MSP_BATTERY_STATE
+  public async getBatteryState() {
+    return parseBatteryState(await this.sendMessage(MSPCodes.MSP_BATTERY_STATE));
+  }
+
+  // MSP_VOLTAGE_METER_CONFIG
+  public async getVoltageMeterConfig() {
+    return parseVoltageMeterConfig(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG));
+  }
+
+  // MSP_CURRENT_METER_CONFIG
+  public async getCurrentMeterConfig() {
+    return parseCurrentMeterConfig(await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG));
+  }
+
+  // MSP_BATTERY_CONFIG
+  public async getBatteryConfig() {
+    return parseBatteryConfig(await this.sendMessage(MSPCodes.MSP_BATTERY_CONFIG));
+  }
+
+  // TODO: MSP_SET_BATTERY_CONFIG
+
+  // MSP_MOTOR_CONFIG
+  public async getMotorConfig() {
+    return parseMotorConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_CONFIG));
+  }
+
+  // TODO: MSP_DISPLAYPORT
+  // TODO: MSP_SET_RAW_RC
+  // TODO: MSP_SET_PID
+  // TODO: MSP_SET_RC_TUNING
+  // TODO: MSP_ACC_CALIBRATION
+  // TODO: MSP_MAG_CALIBRATION
+  // TODO: MSP_SET_MOTOR_CONFIG
+  // TODO: MSP_SET_GPS_CONFIG
+  // TODO: MSP_SET_GPS_RESCUE
+  // TODO: MSP_SET_RSSI_CONFIG
+  // TODO: MSP_SET_FEATURE_CONFIG
+  // TODO: MSP_SET_BEEPER_CONFIG
+  // TODO: MSP_RESET_CONF
+  // TODO: MSP_SELECT_SETTING
+  // TODO: MSP_SET_SERVO_CONFIGURATION
+  // TODO: MSP_EEPROM_WRITE
+  // TODO: MSP_SET_CURRENT_METER_CONFIG
+  // TODO: MSP_SET_VOLTAGE_METER_CONFIG
 
   // MSP_API_VERSION
   public async getApiVersion() {
