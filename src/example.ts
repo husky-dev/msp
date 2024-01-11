@@ -11,48 +11,20 @@ const main = async () => {
 
   msp.on('connect', async () => {
     console.log('connected');
-    // await msp.sendMessage(MSPCodes.MSP_API_VERSION);
-    // await msp.sendMessage(MSPCodes.MSP_BOARD_INFO);
-    // await msp.sendMessage(MSPCodes.MSP_STATUS);
-    // await msp.sendMessage(MSPCodes.MSP_STATUS_EX);
-    // await msp.sendMessage(MSPCodes.MSP_RC);
-    // await msp.sendMessage(MSPCodes.MSP_RAW_IMU);
-    // await msp.sendMessage(MSPCodes.MSP_RAW_GPS);
-    // await msp.sendMessage(MSPCodes.MSP_COMP_GPS);
-    // await msp.sendMessage(MSPCodes.MSP_ATTITUDE);
-    // await msp.sendMessage(MSPCodes.MSP_SONAR);
-    // await msp.sendMessage(MSPCodes.MSP_SERVO);
-    // await msp.sendMessage(MSPCodes.MSP_MOTOR);
-    // await msp.sendMessage(MSPCodes.MSP_MOTOR_CONFIG);
-    // await msp.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY);
-    // await msp.sendMessage(MSPCodes.MSP_ANALOG);
-    // await msp.sendMessage(MSPCodes.MSP_VOLTAGE_METERS);
-    // await msp.sendMessage(MSPCodes.MSP_CURRENT_METERS);
-    // await msp.sendMessage(MSPCodes.MSP_BATTERY_STATE);
-    // await msp.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG);
-    // await msp.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG);
-    // await msp.sendMessage(MSPCodes.MSP_BATTERY_CONFIG);
-
-    // await msp.sendMessage(MSPCodes.MSP_NAME);
-    // await msp.sendMessage(MSPCodes.MSP_FC_VARIANT);
-    // await msp.sendMessage(MSPCodes.MSP_FC_VERSION);
-    // await msp.sendMessage(MSPCodes.MSP_BUILD_INFO);
-
-    // console.log('set name');
-    // await msp.setName('SDUA_12345');
-    // console.log('set name done');
-
-    // console.log('get name');
-    // const name = await msp.getName();
-    // console.log('get name done', { name });
-
-    // console.log('set motor');
-    // await msp.setMotor([2000, 2000, 2000, 2000]);
-    // console.log('set motor done');
-
-    // console.log('get motor');
-    // const motor = await msp.getMotor();
-    // console.log('motor', motor);
+    console.log('getStatus', await msp.getStatus());
+    console.log('getStatusEx', await msp.getStatusEx());
+    console.log('getRawIMU', await msp.getRawIMU());
+    console.log('getServo', await msp.getServo());
+    console.log('getMotor', await msp.getMotor());
+    console.log('getRc', await msp.getRc());
+    console.log('getRawGPS', await msp.getRawGPS());
+    console.log('getCompGPS', await msp.getCompGPS());
+    console.log('getApiVersion', await msp.getApiVersion());
+    console.log('getFcVariant', await msp.getFcVariant());
+    console.log('getFcVersion', await msp.getFcVersion());
+    console.log('getBuildInfo', await msp.getBuildInfo());
+    console.log('getBoardInfo', await msp.getBoardInfo());
+    console.log('getName', await msp.getName());
   });
 
   msp.on('disconnect', () => {
@@ -60,7 +32,7 @@ const main = async () => {
   });
 
   msp.on('message', (msg: MSPMsg) => {
-    console.log(msg);
+    // console.log(msg);
   });
 
   await msp.connect();
