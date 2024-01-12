@@ -44,6 +44,7 @@ import {
   parseSonar,
   parseStatus,
   parseStatusEx,
+  parseUID,
   parseVoltageMeterConfig,
   parseVoltageMeters,
 } from './msg';
@@ -467,9 +468,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP2_SET_TEXT
   // TODO: PILOT_NAME
   // TODO: CRAFT_NAME
-
   // TODO: PID_PROFILE_NAME
   // TODO: RATE_PROFILE_NAME
+
   // TODO: BUILD_KEY
   // TODO: MSP_SET_CHANNEL_FORWARDING
 
@@ -480,7 +481,6 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP_SET_ADJUSTMENT_RANGE
 
   // TODO: MSP_SET_RTC
-  // TODO: MSP_UID
   // TODO: MSP_BOXIDS
   // TODO: MSP_BOXNAMES
   // TODO: MSP_CALCULATE_SIMPLIFIED_DTERM
@@ -569,6 +569,11 @@ export class MultiwiiSerialProtocol extends EventEmitter {
       buffer = push8(buffer, name.charCodeAt(i));
     }
     await this.sendMessage(MSPCodes.MSP_SET_NAME, Buffer.from(buffer));
+  }
+
+  // MPS_UID
+  public async getUid(): Promise<string> {
+    return parseUID(await this.sendMessage(MSPCodes.MSP_UID));
   }
 }
 
