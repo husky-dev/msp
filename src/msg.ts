@@ -4,19 +4,18 @@ import { BuffDataView, buffToDataView, push16, push8 } from './utils';
 const SIGNATURE_LENGTH = 32;
 
 /**
- * This structure represents the status of the flight controller, including the current system status,
- * cycle time, and various flags indicating the active features and sensors.
+ * Represents the status of the Multiwii Serial Protocol (MSP).
  */
 export interface MSPStatus {
-  /**  The time, in microseconds, it takes to complete one full cycle of the main loop.  */
+  /** Cycle time in milliseconds. Example: `20` */
   cycleTime: number;
-  /**  The number of I2C errors that have occurred since the last MSP_STATUS message was sent.  */
+  /** Number of I2C errors. Example: `0` */
   i2cError: number;
-  /** Bitmask indicating active sensors: ACC=1, BARO=2, MAG=4, GPS=8, SONAR=16, etc. */
+  /** Bitmask indicating active sensors. Example: `3` (gyro + accelerometer) */
   activeSensors: number;
-  /** Bitmask indicating active flight modes: ANGLE=1, HORIZON=2, etc. */
+  /** Current mode as a bitmask. Example: `1` (stabilized) */
   mode: number;
-  /**  The current profile number.  */
+  /** Current profile index. Example: `1` */
   profile: number;
 }
 
@@ -28,17 +27,31 @@ export const parseStatus = (data: BuffDataView): MSPStatus => ({
   profile: data.readU8(),
 });
 
+/**
+ * Represents the extended status of the Multiwii Serial Protocol (MSP).
+ */
 export interface MSPStatusEx {
+  /** Cycle time in milliseconds. Example: `20` */
   cycleTime: number;
+  /** Number of I2C errors. Example: `0` */
   i2cError: number;
+  /** Bitmask indicating active sensors. Example: `3` (gyro + accelerometer) */
   activeSensors: number;
+  /** Current mode as a bitmask. Example: `1` (stabilized) */
   mode: number;
+  /** Current profile index. Example: `1` */
   profile: number;
+  /** CPU load in percentage. Example: `15` */
   cpuload: number;
+  /** Number of available profiles. Example: `3` */
   numProfiles: number;
+  /** Current rate profile index. Example: `1` */
   rateProfile: number;
+  /** Arming disable count. Example: `0` */
   armingDisableCount: number;
+  /** Arming disable flags as a bitmask. Example: `1` (condition not met) */
   armingDisableFlags: number;
+  /** Configuration state flag. Example: `1` (config changed) */
   configStateFlag: number;
 }
 
@@ -85,12 +98,15 @@ export const parseStatusEx = (data: BuffDataView): MSPStatusEx => {
 };
 
 /**
- * This structure represents the raw sensor data from the flight controller.
+ * Represents the raw sensor data from the flight controller.
  */
 export interface MSPRawIMU {
-  accelerometer: number[]; //  0.13720703125, -0.0546875, 0.20458984375
-  gyroscope: number[]; // -0.48780487804878053, 0.7317073170731708, 0
-  magnetometer: number[]; // 0, 0, 0
+  /** Accelerometer data as an array of XYZ values. Example: `[0.13720703125, -0.0546875, 0.20458984375]` */
+  accelerometer: number[];
+  /** Gyroscope data as an array of XYZ rotational values. Example: `[-0.48780487804878053, 0.7317073170731708, 0]` */
+  gyroscope: number[];
+  /** Magnetometer data as an array of XYZ magnetic field values. Example: `[0, 0, 0]` */
+  magnetometer: number[];
 }
 
 export const parseRawIMU = (data: BuffDataView): MSPRawIMU => {
@@ -139,12 +155,21 @@ export const parseMotor = (data: BuffDataView) => {
 // TODO: MSP2_MOTOR_OUTPUT_REORDERING
 // TODO: MSP2_GET_VTX_DEVICE_STATUS
 
+/**
+ * Represents the telemetry data for a motor in Multiwii Serial Protocol.
+ */
 export interface MSPMotorTelemetry {
+  /** Revolutions per minute of the motor. Example: `4500` */
   rpm: number;
+  /** Percentage of invalid data packets. Example: `2` */
   invalidPercent: number;
+  /** Motor temperature in degrees Celsius. Example: `35` */
   temperature: number;
+  /** Motor voltage in volts. Example: `11.1` */
   voltage: number;
+  /** Motor current in amperes. Example: `1.5` */
   current: number;
+  /** Total power consumption in milliampere-hours. Example: `500` */
   consumption: number;
 }
 
@@ -164,6 +189,11 @@ export const parseMotorTelemetry = (data: BuffDataView): MSPMotorTelemetry[] => 
   return motors;
 };
 
+/**
+ * Parses buffer data to extract remote control (RC) channel values.
+ * @param {BuffDataView} data - The buffer data to be parsed.
+ * @returns {number[]} An array of RC channel values.
+ */
 export const parseRC = (data: BuffDataView) => {
   const activeChannels = data.length() / 2;
   const channels = [];
@@ -173,13 +203,23 @@ export const parseRC = (data: BuffDataView) => {
   return channels;
 };
 
+/**
+ * Represents the raw GPS data from the flight controller.
+ */
 export interface MSPRawGPS {
+  /** GPS fix type. 0: No Fix, 1: 2D Fix, 2: 3D Fix. Example: `2` */
   fix: number;
+  /** Number of satellites. Example: `8` */
   numSat: number;
+  /** Latitude in decimal degrees. Example: `52.5200` */
   lat: number;
+  /** Longitude in decimal degrees. Example: `13.4050` */
   lon: number;
+  /** Altitude in meters. Example: `30` */
   alt: number;
+  /** Speed in meters per second. Example: `1.5` */
   speed: number;
+  /** Ground course in degrees. Example: `200` */
   groundCourse: number;
 }
 
@@ -193,9 +233,15 @@ export const parseRawGPS = (data: BuffDataView): MSPRawGPS => ({
   groundCourse: data.readU16(),
 });
 
+/**
+ * Represents the computed GPS data for navigation purposes.
+ */
 export interface MSPCompGps {
+  /** Distance to home point in meters. Example: `100` */
   distanceToHome: number;
+  /** Direction to home point in degrees from North. Example: `270` (West) */
   directionToHome: number;
+  /** Update status. 0: No update, 1: Updated. Example: `1` */
   update: number;
 }
 
@@ -205,20 +251,39 @@ export const parseCompGPS = (data: BuffDataView): MSPCompGps => ({
   update: data.readU8(),
 });
 
+/**
+ * Parses buffer data into an array representing attitude (orientation) in degrees.
+ * @param {BuffDataView} data - The buffer data to be parsed.
+ * @returns {number[]} An array of attitude values in degrees for x (roll), y (pitch), and z (yaw) axes.
+ */
 export const parseAttitude = (data: BuffDataView) => [
-  data.read16() / 10, // x
-  data.read16() / 10, // y
-  data.read16() / 10, // z
+  data.read16() / 10, // Roll: Divides by 10 to convert to degrees.
+  data.read16() / 10, // Pitch: Divides by 10 to convert to degrees.
+  data.read16() / 10, // Yaw: Divides by 10 to convert to degrees.
 ];
 
-export const parseAltitude = (data: BuffDataView) => parseFloat((data.read32() / 100.0).toFixed(2)); // correct scale factor;
+/**
+ * Parses buffer data to extract altitude information.
+ * @param {BuffDataView} data - The buffer data to be parsed.
+ * @returns {number} Altitude value in meters with two decimal places.
+ */
+export const parseAltitude = (data: BuffDataView) =>
+  // Converts the 32-bit value to altitude in meters with correct scale factor.
+  parseFloat((data.read32() / 100.0).toFixed(2));
 
 export const parseSonar = (data: BuffDataView) => data.read32();
 
+/**
+ * Represents the analog data readings in Multiwii Serial Protocol.
+ */
 export interface MSPAnalog {
+  /** Battery voltage in volts. Example: `11.1` */
   voltage: number;
+  /** Total current consumption in milliampere-hours (mAh). Example: `1500` */
   mAhdrawn: number;
+  /** Received Signal Strength Indicator (RSSI). Example: `75` */
   rssi: number;
+  /** Current draw in amperes. Example: `15.5` */
   amperage: number;
 }
 
@@ -230,8 +295,13 @@ export const parseAnalog = (data: BuffDataView): MSPAnalog => ({
   // FC.ANALOG.voltage = data.readU16() / 100; ???
 });
 
+/**
+ * Represents a voltage meter reading in Multiwii Serial Protocol.
+ */
 export interface MSPVoltageMeter {
+  /** Identifier for the voltage meter. Example: `1` */
   id: number;
+  /** Voltage reading from the meter in volts. Example: `11.1` */
   voltage: number;
 }
 
@@ -248,9 +318,15 @@ export const parseVoltageMeters = (data: BuffDataView): MSPVoltageMeter[] => {
   return voltageMeters;
 };
 
+/**
+ * Represents a current meter reading in Multiwii Serial Protocol.
+ */
 export interface MSPCurrentMeter {
+  /** Identifier for the current meter. Example: `1` */
   id: number;
+  /** Total current consumption in milliampere-hours (mAh). Example: `1500` */
   mAhDrawn: number;
+  /** Current draw in amperes. Example: `15.5` */
   amperage: number;
 }
 
@@ -267,12 +343,21 @@ export const parseCurrentMeters = (data: BuffDataView) => {
   return currentMeters;
 };
 
+/**
+ * Represents the state of a battery in Multiwii Serial Protocol.
+ */
 export interface MSPBatteryState {
+  /** Number of cells in the battery. Example: `4` */
   cellCount: number;
+  /** Total battery capacity in milliampere-hours (mAh). Example: `5000` */
   capacity: number;
+  /** Current battery voltage in volts. Example: `14.8` */
   voltage: number;
+  /** Total current consumed since start in milliampere-hours (mAh). Example: `1500` */
   mAhDrawn: number;
+  /** Current draw in amperes. Example: `15.5` */
   amperage: number;
+  /** Battery state indicator (e.g., 0 for low, 1 for good). Example: `1` */
   batteryState: number;
 }
 
@@ -286,11 +371,19 @@ export const parseBatteryState = (data: BuffDataView): MSPBatteryState => ({
   // FC.BATTERY_STATE.voltage = data.readU16() / 100; ???
 });
 
+/**
+ * Represents the configuration settings for a voltage meter in Multiwii Serial Protocol.
+ */
 export interface MSPVoltageMeterConfig {
+  /** Identifier for the voltage meter. Example: `1` */
   id: number;
+  /** Type of sensor used for voltage measurement. Example: `0` (for a specific sensor type) */
   sensorType: number;
+  /** Scale factor for voltage measurement. Example: `110` */
   vbatscale: number;
+  /** Voltage meter resistance divider value. Example: `10` */
   vbatresdivval: number;
+  /** Voltage meter resistance divider multiplier. Example: `1` */
   vbatresdivmultiplier: number;
 }
 
@@ -318,10 +411,17 @@ export const parseVoltageMeterConfig = (data: BuffDataView): MSPVoltageMeterConf
   return voltageMeterConfigs;
 };
 
+/**
+ * Represents the configuration settings for a current meter in Multiwii Serial Protocol.
+ */
 export interface MSPCurrentMeterConfig {
+  /** Identifier for the current meter. Example: `1` */
   id: number;
+  /** Type of sensor used for current measurement. Example: `0` (for a specific sensor type) */
   sensorType: number;
+  /** Scale factor for current measurement. Example: `400` */
   scale: number;
+  /** Offset for current measurement calibration. Example: `0` */
   offset: number;
 }
 
@@ -349,12 +449,21 @@ export const parseCurrentMeterConfig = (data: BuffDataView): MSPCurrentMeterConf
   return currentMeterConfigs;
 };
 
+/**
+ * Represents the battery configuration settings in Multiwii Serial Protocol.
+ */
 export interface MSPBatteryConfig {
+  /** Minimum cell voltage for battery in volts. Example: `3.3` */
   vbatmincellvoltage: number;
+  /** Maximum cell voltage for battery in volts. Example: `4.2` */
   vbatmaxcellvoltage: number;
+  /** Warning cell voltage for battery in volts. Example: `3.5` */
   vbatwarningcellvoltage: number;
+  /** Total battery capacity in milliampere-hours (mAh). Example: `5000` */
   capacity: number;
+  /** Source for voltage measurement. Example: `1` (specific source type) */
   voltageMeterSource: number;
+  /** Source for current measurement. Example: `1` (specific source type) */
   currentMeterSource: number;
 }
 
@@ -376,13 +485,23 @@ export const parseBatteryConfig = (data: BuffDataView): MSPBatteryConfig => ({
 // TODO: MSP_LOOP_TIME
 // TODO: MSP_MISC
 
+/**
+ * Represents the motor configuration settings in Multiwii Serial Protocol.
+ */
 export interface MSPMotorConfig {
+  /** Minimum throttle value. Example: `1000` */
   minthrottle: number;
+  /** Maximum throttle value. Example: `2000` */
   maxthrottle: number;
+  /** Minimum command signal to send to ESCs. Example: `1000` */
   mincommand: number;
+  /** Number of motors. Optional. Example: `4` */
   motorCount?: number;
+  /** Number of poles in the motor. Optional. Example: `14` */
   motorPoles?: number;
+  /** Flag to use Dshot telemetry. Optional. Example: `true` for use, `false` for not use */
   useDshotTelemetry?: boolean;
+  /** Flag to use ESC sensor. Optional. Example: `true` for use, `false` for not use */
   useEscSensor?: boolean;
 }
 
@@ -439,8 +558,13 @@ export const composeSetMotor = (motor: number[]): Buffer => {
 // TODO: MSP_BOARD_ALIGNMENT_CONFIG
 // TODO: MSP_SET_REBOOT
 
+/**
+ * Represents the API version information in Multiwii Serial Protocol.
+ */
 export interface MSPApiVersion {
+  /** MSP protocol version number. Example: `2` */
   mspProtocolVersion: number;
+  /** API version as a string. Example: `"1.40"` */
   apiVersion: string;
 }
 
@@ -476,15 +600,27 @@ export const parseBuildInfo = (data: BuffDataView) => {
   return String.fromCharCode.apply(null, buff);
 };
 
+/**
+ * Represents the board information in Multiwii Serial Protocol.
+ */
 export interface MSPBoardInfo {
+  /** Unique identifier for the board. Example: `"AFNA"` */
   boardIdentifier: string;
+  /** Board version number. Example: `3` */
   boardVersion: number;
+  /** Type of the board. Example: `1` (specific type) */
   boardType: number;
+  /** Bitmask of the target's capabilities. Example: `0b10101` */
   targetCapabilities: number;
+  /** Name of the target. Example: `"Naze32"` */
   targetName: string;
+  /** Name of the board. Example: `"SP Racing F3"` */
   boardName: string;
+  /** Manufacturer ID. Example: `"ABCD"` */
   manufacturerId: string;
+  /** Signature as an array of numbers. Example: `[1, 2, 3, 4, 5]` */
   signature: number[];
+  /** MCU type ID. Example: `1` (specific MCU type) */
   mcuTypeId: number;
 }
 

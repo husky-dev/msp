@@ -5,6 +5,22 @@ import { MSPCodes } from './codes';
 import {
   composeSetMotor,
   composeSetName,
+  MSPAnalog,
+  MSPApiVersion,
+  MSPBatteryConfig,
+  MSPBatteryState,
+  MSPBoardInfo,
+  MSPCompGps,
+  MSPCurrentMeter,
+  MSPCurrentMeterConfig,
+  MSPMotorConfig,
+  MSPMotorTelemetry,
+  MSPRawGPS,
+  MSPRawIMU,
+  MSPStatus,
+  MSPStatusEx,
+  MSPVoltageMeter,
+  MSPVoltageMeterConfig,
   parseAltitude,
   parseAnalog,
   parseApiVersion,
@@ -145,109 +161,109 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   // MSP_STATUS
-  public async getStatus() {
+  public async getStatus(): Promise<MSPStatus> {
     return parseStatus(await this.sendMessage(MSPCodes.MSP_STATUS));
   }
 
   // MSP_STATUS_EX
-  public async getStatusEx() {
+  public async getStatusEx(): Promise<MSPStatusEx> {
     return parseStatusEx(await this.sendMessage(MSPCodes.MSP_STATUS_EX));
   }
 
   // MSP_RAW_IMU
-  public async getRawIMU() {
+  public async getRawIMU(): Promise<MSPRawIMU> {
     return parseRawIMU(await this.sendMessage(MSPCodes.MSP_RAW_IMU));
   }
 
   // MSP_SERVO
-  public async getServo() {
+  public async getServo(): Promise<number[]> {
     return parseServo(await this.sendMessage(MSPCodes.MSP_SERVO));
   }
 
   // MSP_MOTOR
-  public async getMotor() {
+  public async getMotor(): Promise<number[]> {
     return parseMotor(await this.sendMessage(MSPCodes.MSP_MOTOR));
   }
 
   // MSP_SET_MOTOR
-  public async setMotor(motor: number[]) {
+  public async setMotor(motor: number[]): Promise<void> {
     await this.sendMessage(MSPCodes.MSP_SET_MOTOR, composeSetMotor(motor));
   }
 
   // MSP_MOTOR_TELEMETRY
-  public async getMotorTelemetry() {
+  public async getMotorTelemetry(): Promise<MSPMotorTelemetry[]> {
     return parseMotorTelemetry(await this.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY));
   }
 
   // MSP_RC
-  public async getRc() {
+  public async getRc(): Promise<number[]> {
     return parseRC(await this.sendMessage(MSPCodes.MSP_RC));
   }
 
   // MSP_RAW_GPS
-  public async getRawGPS() {
+  public async getRawGPS(): Promise<MSPRawGPS> {
     return parseRawGPS(await this.sendMessage(MSPCodes.MSP_RAW_GPS));
   }
 
   // MSP_COMP_GPS
-  public async getCompGPS() {
+  public async getCompGPS(): Promise<MSPCompGps> {
     return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
   }
 
   // MSP_ATTITUDE
-  public async getAttitude() {
+  public async getAttitude(): Promise<number[]> {
     return parseAttitude(await this.sendMessage(MSPCodes.MSP_ATTITUDE));
   }
 
   // MSP_ALTITUDE
-  public async getAltitude() {
+  public async getAltitude(): Promise<number> {
     return parseAltitude(await this.sendMessage(MSPCodes.MSP_ALTITUDE));
   }
 
   // MSP_SONAR
-  public async getSonar() {
+  public async getSonar(): Promise<number> {
     return parseSonar(await this.sendMessage(MSPCodes.MSP_SONAR));
   }
 
   // MSP_ANALOG
-  public async getAnalog() {
+  public async getAnalog(): Promise<MSPAnalog> {
     return parseAnalog(await this.sendMessage(MSPCodes.MSP_ANALOG));
   }
 
   // MSP_VOLTAGE_METERS
-  public async getVoltageMeters() {
+  public async getVoltageMeters(): Promise<MSPVoltageMeter[]> {
     return parseVoltageMeters(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METERS));
   }
 
   // MSP_CURRENT_METERS
-  public async getCurrentMeters() {
+  public async getCurrentMeters(): Promise<MSPCurrentMeter[]> {
     return parseCurrentMeters(await this.sendMessage(MSPCodes.MSP_CURRENT_METERS));
   }
 
   // MSP_BATTERY_STATE
-  public async getBatteryState() {
+  public async getBatteryState(): Promise<MSPBatteryState> {
     return parseBatteryState(await this.sendMessage(MSPCodes.MSP_BATTERY_STATE));
   }
 
   // MSP_VOLTAGE_METER_CONFIG
-  public async getVoltageMeterConfig() {
+  public async getVoltageMeterConfig(): Promise<MSPVoltageMeterConfig[]> {
     return parseVoltageMeterConfig(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG));
   }
 
   // MSP_CURRENT_METER_CONFIG
-  public async getCurrentMeterConfig() {
+  public async getCurrentMeterConfig(): Promise<MSPCurrentMeterConfig[]> {
     return parseCurrentMeterConfig(await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG));
   }
 
   // MSP_BATTERY_CONFIG
-  public async getBatteryConfig() {
+  public async getBatteryConfig(): Promise<MSPBatteryConfig> {
     return parseBatteryConfig(await this.sendMessage(MSPCodes.MSP_BATTERY_CONFIG));
   }
 
   // TODO: MSP_SET_BATTERY_CONFIG
 
   // MSP_MOTOR_CONFIG
-  public async getMotorConfig() {
+  public async getMotorConfig(): Promise<MSPMotorConfig> {
     return parseMotorConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_CONFIG));
   }
 
@@ -271,37 +287,37 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP_SET_VOLTAGE_METER_CONFIG
 
   // MSP_API_VERSION
-  public async getApiVersion() {
+  public async getApiVersion(): Promise<MSPApiVersion> {
     return parseApiVersion(await this.sendMessage(MSPCodes.MSP_API_VERSION));
   }
 
   // MSP_FC_VARIANT
-  public async getFcVariant() {
+  public async getFcVariant(): Promise<string> {
     return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT));
   }
 
   // MSP_FC_VERSION
-  public async getFcVersion() {
+  public async getFcVersion(): Promise<string> {
     return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION));
   }
 
   // MSP_BUILD_INFO
-  public async getBuildInfo() {
+  public async getBuildInfo(): Promise<string> {
     return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO));
   }
 
   // MSP_BOARD_INFO
-  public async getBoardInfo() {
+  public async getBoardInfo(): Promise<MSPBoardInfo> {
     return parseBoardInfo(await this.sendMessage(MSPCodes.MSP_BOARD_INFO));
   }
 
   // MSP_NAME
-  public async getName() {
+  public async getName(): Promise<string> {
     return parseName(await this.sendMessage(MSPCodes.MSP_NAME));
   }
 
   // MSP_SET_NAME
-  public async setName(name: string) {
+  public async setName(name: string): Promise<void> {
     await this.sendMessage(MSPCodes.MSP_SET_NAME, composeSetName(name));
   }
 }
