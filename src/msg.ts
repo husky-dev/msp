@@ -1,7 +1,5 @@
 import { MSPCodes } from './codes';
-import { BuffDataView, buffToDataView, push16, push8 } from './utils';
-
-const SIGNATURE_LENGTH = 32;
+import { BuffDataView, buffToDataView, push16 } from './utils';
 
 /**
  * Represents the status of the Multiwii Serial Protocol (MSP).
@@ -151,9 +149,6 @@ export const parseMotor = (data: BuffDataView) => {
   }
   return motor;
 };
-
-// TODO: MSP2_MOTOR_OUTPUT_REORDERING
-// TODO: MSP2_GET_VTX_DEVICE_STATUS
 
 /**
  * Represents the telemetry data for a motor in Multiwii Serial Protocol.
@@ -479,12 +474,6 @@ export const parseBatteryConfig = (data: BuffDataView): MSPBatteryConfig => ({
   // FC.BATTERY_CONFIG.vbatwarningcellvoltage = data.readU16() / 100; ???
 });
 
-// TODO: MSP_RC_TUNING
-// TODO: MSP_PID
-// TODO: MSP_ARMING_CONFIG
-// TODO: MSP_LOOP_TIME
-// TODO: MSP_MISC
-
 /**
  * Represents the motor configuration settings in Multiwii Serial Protocol.
  */
@@ -523,40 +512,6 @@ export const parseMotorConfig = (data: BuffDataView): MSPMotorConfig => {
   // }
   return msg;
 };
-
-// TODO: MSP_COMPASS_CONFIG
-// TODO: MSP_GPS_CONFIG
-// TODO: MSP_GPS_RESCUE
-// TODO: MSP_RSSI_CONFIG
-// TODO: MSP_MOTOR_3D_CONFIG
-// TODO: MSP_BOXNAMES
-// TODO: MSP_PIDNAMES
-// TODO: MSP_BOXIDS
-// TODO: MSP_SERVO_MIX_RULES
-// TODO: MSP_SERVO_CONFIGURATIONS
-// TODO: MSP_RC_DEADBAND
-// TODO: MSP_SENSOR_ALIGNMENT
-// TODO: MSP_DEBUG
-
-export const composeSetMotor = (motor: number[]): Buffer => {
-  let buffer: number[] = [];
-  for (let i = 0; i < motor.length; i++) {
-    buffer = push16(buffer, motor[1]);
-  }
-  return Buffer.from(buffer);
-};
-
-// TODO: MSP_UID
-// TODO: MSP_ACC_TRIM
-// TODO: MSP_SET_ACC_TRIM
-// TODO: MSP_GPS_SV_INFO
-// TODO: MSP_RX_MAP
-// TODO: MSP_SET_RX_MAP
-// TODO: MSP_MIXER_CONFIG
-// TODO: MSP_FEATURE_CONFIG
-// TODO: MSP_BEEPER_CONFIG
-// TODO: MSP_BOARD_ALIGNMENT_CONFIG
-// TODO: MSP_SET_REBOOT
 
 /**
  * Represents the API version information in Multiwii Serial Protocol.
@@ -625,6 +580,8 @@ export interface MSPBoardInfo {
 }
 
 export const parseBoardInfo = (data: BuffDataView): MSPBoardInfo => {
+  const SIGNATURE_LENGTH = 32;
+
   let boardIdentifier: string = '';
   for (let i = 0; i < 4; i++) {
     boardIdentifier += String.fromCharCode(data.readU8());
@@ -682,246 +639,6 @@ export const parseName = (data: BuffDataView) => {
   }
   return value;
 };
-
-// TODO: MSP2_GET_TEXT
-// TODO: PILOT_NAME
-// TODO: CRAFT_NAME
-// TODO: PID_PROFILE_NAME
-// TODO: RATE_PROFILE_NAME
-// TODO: BUILD_KEY
-// TODO: MSP2_GET_LED_STRIP_CONFIG_VALUES
-// TODO: MSP_SET_CHANNEL_FORWARDING
-// TODO: MSP_CF_SERIAL_CONFIG
-// TODO: MSP2_COMMON_SERIAL_CONFIG
-// TODO: MSP_SET_CF_SERIAL_CONFIG
-// TODO: MSP2_COMMON_SET_SERIAL_CONFIG
-// TODO: MSP_MODE_RANGES
-// TODO: MSP_MODE_RANGES_EXTRA
-// TODO: MSP_ADJUSTMENT_RANGES
-// TODO: MSP_RX_CONFIG
-// TODO: MSP_FAILSAFE_CONFIG
-// TODO: MSP_RXFAIL_CONFIG
-// TODO: MSP_ADVANCED_CONFIG
-// TODO: MSP_FILTER_CONFIG
-// TODO: MSP_SET_PID_ADVANCED
-// TODO: MSP_PID_ADVANCED
-// TODO: MSP_SENSOR_CONFIG
-// TODO: MSP2_SENSOR_CONFIG_ACTIVE
-// TODO: MSP_LED_STRIP_CONFIG
-// TODO: MSP_SET_LED_STRIP_CONFIG
-// TODO: MSP_LED_COLORS
-// TODO: MSP_SET_LED_COLORS
-// TODO: MSP_LED_STRIP_MODECOLOR
-// TODO: MSP_SET_LED_STRIP_MODECOLOR
-// TODO: MSP_DATAFLASH_SUMMARY
-// TODO: MSP_DATAFLASH_READ
-// TODO: MSP_DATAFLASH_ERASE
-// TODO: MSP_SDCARD_SUMMARY
-// TODO: MSP_BLACKBOX_CONFIG
-// TODO: MSP_SET_BLACKBOX_CONFIG
-// TODO: MSP_TRANSPONDER_CONFIG
-// TODO: MSP_SET_TRANSPONDER_CONFIG
-// TODO: MSP_VTX_CONFIG
-// TODO: MSP_SET_VTX_CONFIG
-// TODO: MSP_VTXTABLE_BAND
-// TODO: MSP_SET_VTXTABLE_BAND
-// TODO: MSP_VTXTABLE_POWERLEVEL
-// TODO: MSP_SET_SIMPLIFIED_TUNING
-// TODO: MSP_SIMPLIFIED_TUNING
-// TODO: MSP_CALCULATE_SIMPLIFIED_PID
-// TODO: MSP_CALCULATE_SIMPLIFIED_GYRO
-// TODO: MSP_CALCULATE_SIMPLIFIED_DTERM
-// TODO: MSP_VALIDATE_SIMPLIFIED_TUNING
-
-interface MSPSetVtxTablePowerLevelMsg {
-  code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL;
-  name: 'MSP_SET_VTXTABLE_POWERLEVEL';
-}
-
-const parseSetVtxTablePowerLevel = (data: BuffDataView): MSPSetVtxTablePowerLevelMsg => ({
-  code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL,
-  name: 'MSP_SET_VTXTABLE_POWERLEVEL',
-});
-
-interface MSPSetModeRangeMsg {
-  code: MSPCodes.MSP_SET_MODE_RANGE;
-  name: 'MSP_SET_MODE_RANGE';
-}
-
-const parseSetModeRange = (data: BuffDataView): MSPSetModeRangeMsg => ({
-  code: MSPCodes.MSP_SET_MODE_RANGE,
-  name: 'MSP_SET_MODE_RANGE',
-});
-
-interface MSPSetAdjustmentRangeMsg {
-  code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE;
-  name: 'MSP_SET_ADJUSTMENT_RANGE';
-}
-
-const parseSetAdjustmentRange = (data: BuffDataView): MSPSetAdjustmentRangeMsg => ({
-  code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE,
-  name: 'MSP_SET_ADJUSTMENT_RANGE',
-});
-
-interface MSPSetBoardAlignmentConfigMsg {
-  code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG;
-  name: 'MSP_SET_BOARD_ALIGNMENT_CONFIG';
-}
-
-const parseSetBoardAlignmentConfig = (data: BuffDataView): MSPSetBoardAlignmentConfigMsg => ({
-  code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG,
-  name: 'MSP_SET_BOARD_ALIGNMENT_CONFIG',
-});
-
-interface MSPPidControllerMsg {
-  code: MSPCodes.MSP_PID_CONTROLLER;
-  name: 'MSP_PID_CONTROLLER';
-  controller: number;
-}
-
-const parsePidController = (data: BuffDataView): MSPPidControllerMsg => ({
-  code: MSPCodes.MSP_PID_CONTROLLER,
-  name: 'MSP_PID_CONTROLLER',
-  controller: data.readU8(),
-});
-
-interface MSPSetPidControllerMsg {
-  code: MSPCodes.MSP_SET_PID_CONTROLLER;
-  name: 'MSP_SET_PID_CONTROLLER';
-}
-
-const parseSetPidController = (data: BuffDataView): MSPSetPidControllerMsg => ({
-  code: MSPCodes.MSP_SET_PID_CONTROLLER,
-  name: 'MSP_SET_PID_CONTROLLER',
-});
-
-interface MSPSetLoopTimeMsg {
-  code: MSPCodes.MSP_SET_LOOP_TIME;
-  name: 'MSP_SET_LOOP_TIME';
-}
-
-const parseSetLoopTime = (data: BuffDataView): MSPSetLoopTimeMsg => ({
-  code: MSPCodes.MSP_SET_LOOP_TIME,
-  name: 'MSP_SET_LOOP_TIME',
-});
-
-interface MSPSetArmingConfigMsg {
-  code: MSPCodes.MSP_SET_ARMING_CONFIG;
-  name: 'MSP_SET_ARMING_CONFIG';
-}
-
-const parseSetArmingConfig = (data: BuffDataView): MSPSetArmingConfigMsg => ({
-  code: MSPCodes.MSP_SET_ARMING_CONFIG,
-  name: 'MSP_SET_ARMING_CONFIG',
-});
-
-interface MSPSetResetCurrPidMsg {
-  code: MSPCodes.MSP_SET_RESET_CURR_PID;
-  name: 'MSP_SET_RESET_CURR_PID';
-}
-
-const parseSetResetCurrPid = (data: BuffDataView): MSPSetResetCurrPidMsg => ({
-  code: MSPCodes.MSP_SET_RESET_CURR_PID,
-  name: 'MSP_SET_RESET_CURR_PID',
-});
-
-interface MSPSetMotor3DConfigMsg {
-  code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG;
-  name: 'MSP_SET_MOTOR_3D_CONFIG';
-}
-
-const parseSetMotor3DConfig = (data: BuffDataView): MSPSetMotor3DConfigMsg => ({
-  code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG,
-  name: 'MSP_SET_MOTOR_3D_CONFIG',
-});
-
-interface MSPSetMixerConfigMsg {
-  code: MSPCodes.MSP_SET_MIXER_CONFIG;
-  name: 'MSP_SET_MIXER_CONFIG';
-}
-
-const parseSetMixerConfig = (data: BuffDataView): MSPSetMixerConfigMsg => ({
-  code: MSPCodes.MSP_SET_MIXER_CONFIG,
-  name: 'MSP_SET_MIXER_CONFIG',
-});
-
-interface MSPSetRcDeadbandMsg {
-  code: MSPCodes.MSP_SET_RC_DEADBAND;
-  name: 'MSP_SET_RC_DEADBAND';
-}
-
-const parseSetRcDeadband = (data: BuffDataView): MSPSetRcDeadbandMsg => ({
-  code: MSPCodes.MSP_SET_RC_DEADBAND,
-  name: 'MSP_SET_RC_DEADBAND',
-});
-
-interface MSPSetSensorAlignmentMsg {
-  code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT;
-  name: 'MSP_SET_SENSOR_ALIGNMENT';
-}
-
-const parseSetSensorAlignment = (data: BuffDataView): MSPSetSensorAlignmentMsg => ({
-  code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT,
-  name: 'MSP_SET_SENSOR_ALIGNMENT',
-});
-
-interface MSPSetRxConfigMsg {
-  code: MSPCodes.MSP_SET_RX_CONFIG;
-  name: 'MSP_SET_RX_CONFIG';
-}
-
-const parseSetRxConfig = (data: BuffDataView): MSPSetRxConfigMsg => ({
-  code: MSPCodes.MSP_SET_RX_CONFIG,
-  name: 'MSP_SET_RX_CONFIG',
-});
-
-interface MSPSetRxFailConfigMsg {
-  code: MSPCodes.MSP_SET_RXFAIL_CONFIG;
-  name: 'MSP_SET_RXFAIL_CONFIG';
-}
-
-const parseSetRxFailConfig = (data: BuffDataView): MSPSetRxFailConfigMsg => ({
-  code: MSPCodes.MSP_SET_RXFAIL_CONFIG,
-  name: 'MSP_SET_RXFAIL_CONFIG',
-});
-
-interface MSPSetFailsafeConfigMsg {
-  code: MSPCodes.MSP_SET_FAILSAFE_CONFIG;
-  name: 'MSP_SET_FAILSAFE_CONFIG';
-}
-
-const parseSetFailsafeConfig = (data: BuffDataView): MSPSetFailsafeConfigMsg => ({
-  code: MSPCodes.MSP_SET_FAILSAFE_CONFIG,
-  name: 'MSP_SET_FAILSAFE_CONFIG',
-});
-
-// TODO: MSP_OSD_CANVAS
-// TODO: MSP_SET_OSD_CANVAS
-// TODO: MSP_OSD_CONFIG
-// TODO: MSP_SET_OSD_CONFIG
-// TODO: MSP_OSD_CHAR_READ
-// TODO: MSP_OSD_CHAR_WRITE
-
-export const composeSetName = (name: string): Buffer => {
-  let buffer: number[] = [];
-  const MSP_BUFFER_SIZE = 64;
-  for (let i = 0; i < name.length && i < MSP_BUFFER_SIZE; i++) {
-    buffer = push8(buffer, name.charCodeAt(i));
-  }
-  return Buffer.from(buffer);
-};
-
-// TODO: MSP2_SET_TEXT
-// TODO: MSP2_SET_LED_STRIP_CONFIG_VALUES
-// TODO: MSP_SET_FILTER_CONFIG
-// TODO: MSP_SET_ADVANCED_CONFIG
-// TODO: MSP_SET_SENSOR_CONFIG
-// TODO: MSP_COPY_PROFILE
-// TODO: MSP_ARMING_DISABLE
-// TODO: MSP_SET_RTC
-// TODO: MSP2_SET_MOTOR_OUTPUT_REORDERING
-// TODO: MSP2_SEND_DSHOT_COMMAND
-// TODO: MSP_MULTIPLE_MSP
 
 export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
@@ -1016,37 +733,37 @@ export const parseMsg = (code: number, payload: Buffer) => {
     case MSPCodes.MSP_SET_MOTOR:
       return { code: MSPCodes.MSP_SET_MOTOR, name: 'MSP_SET_MOTOR' };
     case MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL:
-      return parseSetVtxTablePowerLevel(data);
+      return { code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL, name: 'MSP_SET_VTXTABLE_POWERLEVEL' };
     case MSPCodes.MSP_SET_MODE_RANGE:
-      return parseSetModeRange(data);
+      return { code: MSPCodes.MSP_SET_MODE_RANGE, name: 'MSP_SET_MODE_RANGE' };
     case MSPCodes.MSP_SET_ADJUSTMENT_RANGE:
-      return parseSetAdjustmentRange(data);
+      return { code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE, name: 'MSP_SET_ADJUSTMENT_RANGE' };
     case MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG:
-      return parseSetBoardAlignmentConfig(data);
+      return { code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG, name: 'MSP_SET_BOARD_ALIGNMENT_CONFIG' };
     case MSPCodes.MSP_PID_CONTROLLER:
-      return parsePidController(data);
+      return { code: MSPCodes.MSP_PID_CONTROLLER, name: 'MSP_PID_CONTROLLER' };
     case MSPCodes.MSP_SET_PID_CONTROLLER:
-      return parseSetPidController(data);
+      return { code: MSPCodes.MSP_SET_PID_CONTROLLER, name: 'MSP_SET_PID_CONTROLLER' };
     case MSPCodes.MSP_SET_LOOP_TIME:
-      return parseSetLoopTime(data);
+      return { code: MSPCodes.MSP_SET_LOOP_TIME, name: 'MSP_SET_LOOP_TIME' };
     case MSPCodes.MSP_SET_ARMING_CONFIG:
-      return parseSetArmingConfig(data);
+      return { code: MSPCodes.MSP_SET_ARMING_CONFIG, name: 'MSP_SET_ARMING_CONFIG' };
     case MSPCodes.MSP_SET_RESET_CURR_PID:
-      return parseSetResetCurrPid(data);
+      return { code: MSPCodes.MSP_SET_RESET_CURR_PID, name: 'MSP_SET_RESET_CURR_PID' };
     case MSPCodes.MSP_SET_MOTOR_3D_CONFIG:
-      return parseSetMotor3DConfig(data);
+      return { code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG, name: 'MSP_SET_MOTOR_3D_CONFIG' };
     case MSPCodes.MSP_SET_MIXER_CONFIG:
-      return parseSetMixerConfig(data);
+      return { code: MSPCodes.MSP_SET_MIXER_CONFIG, name: 'MSP_SET_MIXER_CONFIG' };
     case MSPCodes.MSP_SET_RC_DEADBAND:
-      return parseSetRcDeadband(data);
+      return { code: MSPCodes.MSP_SET_RC_DEADBAND, name: 'MSP_SET_RC_DEADBAND' };
     case MSPCodes.MSP_SET_SENSOR_ALIGNMENT:
-      return parseSetSensorAlignment(data);
+      return { code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT, name: 'MSP_SET_SENSOR_ALIGNMENT' };
     case MSPCodes.MSP_SET_RX_CONFIG:
-      return parseSetRxConfig(data);
+      return { code: MSPCodes.MSP_SET_RX_CONFIG, name: 'MSP_SET_RX_CONFIG' };
     case MSPCodes.MSP_SET_RXFAIL_CONFIG:
-      return parseSetRxFailConfig(data);
+      return { code: MSPCodes.MSP_SET_RXFAIL_CONFIG, name: 'MSP_SET_RXFAIL_CONFIG' };
     case MSPCodes.MSP_SET_FAILSAFE_CONFIG:
-      return parseSetFailsafeConfig(data);
+      return { code: MSPCodes.MSP_SET_FAILSAFE_CONFIG, name: 'MSP_SET_FAILSAFE_CONFIG' };
     case MSPCodes.MSP_SET_NAME:
       return { code: MSPCodes.MSP_SET_NAME, name: 'MSP_SET_NAME' };
     case MSPCodes.MSP_API_VERSION:
