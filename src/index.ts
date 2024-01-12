@@ -56,7 +56,7 @@ interface MultiwiiSerialProtocolOpts {
 }
 
 interface MultiwiiCommandCallback {
-  code: MSPCodes;
+  code: number;
   timeout: NodeJS.Timeout;
   resolve: (data: BuffDataView) => void;
   reject: (err: Error) => void;
@@ -139,7 +139,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * Commands
    */
 
-  public async sendMessage(code: MSPCodes, payload: Buffer = Buffer.from([])) {
+  public async sendMessage(code: number, payload: Buffer = Buffer.from([])) {
     if (!this.conencted) {
       throw new Error('Not connected');
     }
