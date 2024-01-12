@@ -324,7 +324,8 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     return parseVoltageMeterConfig(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG));
   }
 
-  // TODO: MSP_SET_VOLTAGE_METER_CONFIG
+  // MSP_SET_VOLTAGE_METER_CONFIG
+  // Not used
 
   /**
    * Current
@@ -340,7 +341,8 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     return parseCurrentMeterConfig(await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG));
   }
 
-  // TODO: MSP_SET_CURRENT_METER_CONFIG
+  // MSP_SET_CURRENT_METER_CONFIG
+  // Not used
 
   /**
    * Batter
