@@ -8,7 +8,39 @@ export const API_VERSION_1_44 = '1.44.0';
 export const API_VERSION_1_45 = '1.45.0';
 export const API_VERSION_1_46 = '1.46.0';
 
-export const encodeMessageV1 = (code: number, data: Buffer) => {
+const mspSymbols = {
+  BEGIN: '$'.charCodeAt(0),
+  PROTO_V1: 'M'.charCodeAt(0),
+  PROTO_V2: 'X'.charCodeAt(0),
+  FROM_MWC: '>'.charCodeAt(0),
+  TO_MWC: '<'.charCodeAt(0),
+  UNSUPPORTED: '!'.charCodeAt(0),
+};
+
+type MSPDecodeResult =
+  | {
+      success: true;
+      code: number;
+      len: number;
+      payload: Buffer;
+      checksum: number;
+    }
+  | {
+      success: false;
+      code: number;
+      error: Error;
+    };
+
+export const encodeMessage = (code: number, payload: Buffer = Buffer.from([])) => {
+  return code <= 254 ? encodeMessageV1(code, payload) : encodeMessageV2(code, payload);
+};
+
+export const decodeMessage = (buff: Buffer): MSPDecodeResult => {
+  const msgVersion = buff[1];
+  return msgVersion === mspSymbols.PROTO_V1 ? decodeMessageV1(buff) : decodeMessageV2(buff);
+};
+
+const encodeMessageV1 = (code: number, data: Buffer) => {
   const dataLength = data.length;
   const bufSize = dataLength + 6;
   const bufOut = Buffer.alloc(bufSize);
@@ -30,7 +62,23 @@ export const encodeMessageV1 = (code: number, data: Buffer) => {
   return bufOut;
 };
 
-export const encodeMessageV2 = (code: number, data: Buffer) => {
+const decodeMessageV1 = (buff: Buffer): MSPDecodeResult => {
+  const symbol = buff[2];
+  const code = buff[4];
+  if (symbol === mspSymbols.UNSUPPORTED) {
+    return {
+      success: false,
+      code,
+      error: new Error(`MSP code ${code} is not supported by the flight controller`),
+    };
+  }
+  const len = buff[3];
+  const payload = buff.slice(5, 5 + len);
+  const checksum = buff[5 + len];
+  return { success: true, len, code, payload, checksum };
+};
+
+const encodeMessageV2 = (code: number, data: Buffer) => {
   const dataLength = data ? data.length : 0;
   // 9 bytes for protocol overhead
   const bufferSize = dataLength + 9;
@@ -50,7 +98,23 @@ export const encodeMessageV2 = (code: number, data: Buffer) => {
   return bufferOut;
 };
 
-const crc8DvbS2Data = (data: Uint8Array, start: number, end: number) => {
+const decodeMessageV2 = (buff: Buffer): MSPDecodeResult => {
+  const symbol = buff[2];
+  const code = buff.readUInt16LE(4);
+  if (symbol === mspSymbols.UNSUPPORTED) {
+    return {
+      success: false,
+      code,
+      error: new Error(`MSP code ${code} is not supported by the flight controller`),
+    };
+  }
+  const len = buff.readUInt16LE(6);
+  const payload = len ? buff.slice(8, 8 + len) : Buffer.from([]);
+  const checksum = buff[buff.length - 1];
+  return { success: true, len, code, payload, checksum };
+};
+
+const crc8DvbS2Data = (data: Buffer, start: number, end: number) => {
   let crc = 0;
   for (let ii = start; ii < end; ii++) {
     crc = crc8DvbS2(crc, data[ii]);

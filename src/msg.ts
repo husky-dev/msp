@@ -648,6 +648,12 @@ export const parseUID = (data: BuffDataView): string => {
   return uid[0].toString(16) + uid[1].toString(16) + uid[2].toString(16);
 };
 
+export const parseGetText = (data: BuffDataView) => {
+  const textType = data.readU8();
+  const value = data.readText();
+  return { type: textType, value };
+};
+
 export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
 
@@ -788,6 +794,10 @@ export const parseMsg = (code: number, payload: Buffer) => {
       return { code: MSPCodes.MSP_NAME, name: 'MSP_NAME', value: parseName(data) };
     case MSPCodes.MSP_UID:
       return { code: MSPCodes.MSP_UID, name: 'MSP_UID', deviceIdentifier: parseUID(data) };
+    case MSPCodes.MSP2_GET_TEXT:
+      return { code: MSPCodes.MSP2_GET_TEXT, name: 'MSP2_GET_TEXT', ...parseGetText(data) };
+    case MSPCodes.MSP2_SET_TEXT:
+      return { code: MSPCodes.MSP2_SET_TEXT, name: 'MSP2_SET_TEXT' };
   }
   throw new Error(`Unknown MSP code: ${code}`);
 };

@@ -32,6 +32,7 @@ import {
   parseCurrentMeters,
   parseFcVariant,
   parseFcVersion,
+  parseGetText,
   parseMotor,
   parseMotorConfig,
   parseMotorTelemetry,
@@ -48,7 +49,7 @@ import {
   parseVoltageMeterConfig,
   parseVoltageMeters,
 } from './msg';
-import { BuffDataView, buffToDataView, encodeMessageV1, encodeMessageV2, push16, push8 } from './utils';
+import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16, push8 } from './utils';
 
 interface MultiwiiSerialProtocolOpts {
   path: string;
@@ -103,23 +104,29 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   private onData(buff: Buffer) {
-    const len = buff[3];
-    const code = buff[4];
-    const payload = buff.slice(5, 5 + len);
-    const msg = parseMsg(code, payload);
+    const res = decodeMessage(buff);
     // Process events
-    if (msg) {
-      this.emit('message', msg);
+    if (!res.success) {
+      this.emit('error', res.error);
     } else {
-      this.emit('error', new Error(`Unsupported message code: ${code}`));
+      const msg = parseMsg(res.code, res.payload);
+      if (msg) {
+        this.emit('message', msg);
+      } else {
+        this.emit('error', new Error(`Unsupported message code: ${res.code}`));
+      }
     }
     // Process callbacks
     for (let i = this.callbacks.length - 1; i >= 0; i--) {
       const callback = this.callbacks[i];
-      if (callback.code === code) {
+      if (callback.code === res.code) {
         clearTimeout(callback.timeout);
         this.callbacks.splice(i, 1);
-        callback.resolve(buffToDataView(payload));
+        if (res.success) {
+          callback.resolve(buffToDataView(res.payload));
+        } else {
+          callback.reject(res.error);
+        }
       }
     }
   }
@@ -144,9 +151,8 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     if (!this.conencted) {
       throw new Error('Not connected');
     }
-    const bufferOut = code <= 254 ? encodeMessageV1(code, payload) : encodeMessageV2(code, payload);
+    const bufferOut = encodeMessage(code, payload);
     await this.port.write(bufferOut);
-
     return new Promise<BuffDataView>((resolve, reject) => {
       this.callbacks.push({
         code,
@@ -463,6 +469,17 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Text
    */
+
+  async getPilotName(): Promise<string> {
+    const data = await this.sendMessage(MSPCodes.MSP2_GET_TEXT, Buffer.from([MSPCodes.PILOT_NAME]));
+    const { type: textType, value } = parseGetText(data);
+    return textType === MSPCodes.PILOT_NAME ? value : '';
+  }
+
+  async setPilotName(name: string): Promise<void> {
+    const data = Buffer.from([MSPCodes.PILOT_NAME, name.length, ...name.split('').map((c) => c.charCodeAt(0))]);
+    await this.sendMessage(MSPCodes.MSP2_SET_TEXT, data);
+  }
 
   // TODO: MSP2_GET_TEXT
   // TODO: MSP2_SET_TEXT
