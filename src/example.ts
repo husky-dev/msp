@@ -26,8 +26,7 @@ const main = async () => {
     // console.log('getBoardInfo', await msp.getBoardInfo());
     // console.log('getName', await msp.getName());
 
-    console.log('pilot name', await msp.getPilotName());
-    // await msp.setPilotName('test')
+    console.log('beeper config', await msp.getBeeperConfig());
   });
 
   msp.on('disconnect', () => {

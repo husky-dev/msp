@@ -7,6 +7,7 @@ import {
   MSPApiVersion,
   MSPBatteryConfig,
   MSPBatteryState,
+  MSPBeeperConfig,
   MSPBoardInfo,
   MSPCompGps,
   MSPCurrentMeter,
@@ -25,6 +26,7 @@ import {
   parseAttitude,
   parseBatteryConfig,
   parseBatteryState,
+  parseBeeperConfig,
   parseBoardInfo,
   parseBuildInfo,
   parseCompGPS,
@@ -568,7 +570,11 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP_FEATURE_CONFIG
   // TODO: MSP_SET_FEATURE_CONFIG
 
-  // TODO: MSP_BEEPER_CONFIG
+  // MSP_BEEPER_CONFIG
+  public async getBeeperConfig(): Promise<MSPBeeperConfig> {
+    return parseBeeperConfig(await this.sendMessage(MSPCodes.MSP_BEEPER_CONFIG));
+  }
+
   // TODO: MSP_SET_BEEPER_CONFIG
 
   // TODO: MSP_SET_REBOOT

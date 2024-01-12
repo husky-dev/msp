@@ -654,6 +654,24 @@ export const parseGetText = (data: BuffDataView) => {
   return { type: textType, value };
 };
 
+/**
+ * Represents the beeper configuration in Multiwii Serial Protocol.
+ */
+export interface MSPBeeperConfig {
+  /** Disabled mask for beepers. Example: `0b101010` */
+  disabledMask: number;
+  /** Dshot beacon tone. Example: `1` */
+  dshotBeaconTone: number;
+  /** Disabled mask for dshot beacon conditions. Example: `0b1100` */
+  dshotBeaconConditionsMask: number;
+}
+
+export const parseBeeperConfig = (data: BuffDataView): MSPBeeperConfig => ({
+  disabledMask: data.readU32(),
+  dshotBeaconTone: data.readU8(),
+  dshotBeaconConditionsMask: data.readU32(),
+});
+
 export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
 
@@ -798,6 +816,8 @@ export const parseMsg = (code: number, payload: Buffer) => {
       return { code: MSPCodes.MSP2_GET_TEXT, name: 'MSP2_GET_TEXT', ...parseGetText(data) };
     case MSPCodes.MSP2_SET_TEXT:
       return { code: MSPCodes.MSP2_SET_TEXT, name: 'MSP2_SET_TEXT' };
+    case MSPCodes.MSP_BEEPER_CONFIG:
+      return { code: MSPCodes.MSP_BEEPER_CONFIG, name: 'MSP_BEEPER_CONFIG', ...parseBeeperConfig(data) };
   }
   throw new Error(`Unknown MSP code: ${code}`);
 };
