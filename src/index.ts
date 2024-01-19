@@ -3,6 +3,7 @@ import { SerialPort } from 'serialport';
 
 import { msp2GetTextCodes, MSPCodes } from './codes';
 import {
+  composeSetName,
   MSPAnalog,
   MSPApiVersion,
   MSPBatteryConfig,
@@ -16,6 +17,7 @@ import {
   MSPMotorTelemetry,
   MSPRawGPS,
   MSPRawIMU,
+  MSPServoConfiguration,
   MSPStatus,
   MSPStatusEx,
   MSPVoltageMeter,
@@ -44,6 +46,7 @@ import {
   parseRawIMU,
   parseRC,
   parseServo,
+  parseServoConfigurations,
   parseSonar,
   parseStatus,
   parseStatusEx,
@@ -51,7 +54,7 @@ import {
   parseVoltageMeterConfig,
   parseVoltageMeters,
 } from './msg';
-import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16, push8 } from './utils';
+import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16 } from './utils';
 
 interface MultiwiiSerialProtocolOpts {
   path: string;
@@ -217,7 +220,15 @@ export class MultiwiiSerialProtocol extends EventEmitter {
 
   // TODO: MSP_SERVO_MIX_RULES
 
-  // TODO: MSP_SERVO_CONFIGURATIONS
+  /**
+   * Retrieves the servo configuration
+   * @see MSP_SERVO_CONFIGURATIONS
+   * @todo Test
+   */
+  public async getServoConfigurations(): Promise<MSPServoConfiguration[]> {
+    return parseServoConfigurations(await this.sendMessage(MSPCodes.MSP_SERVO_CONFIGURATIONS));
+  }
+
   // TODO: MSP_SET_SERVO_CONFIGURATION
 
   /**
@@ -706,12 +717,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @todo Test
    */
   public async setName(name: string): Promise<void> {
-    let buffer: number[] = [];
-    const MSP_BUFFER_SIZE = 64;
-    for (let i = 0; i < name.length && i < MSP_BUFFER_SIZE; i++) {
-      buffer = push8(buffer, name.charCodeAt(i));
-    }
-    await this.sendMessage(MSPCodes.MSP_SET_NAME, Buffer.from(buffer));
+    await this.sendMessage(MSPCodes.MSP_SET_NAME, composeSetName(name));
   }
 
   /**

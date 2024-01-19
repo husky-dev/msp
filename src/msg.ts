@@ -1,5 +1,5 @@
 import { MSPCodes } from './codes';
-import { BuffDataView, buffToDataView, push16 } from './utils';
+import { BuffDataView, buffToDataView, push8 } from './utils';
 
 /**
  * Represents the status of the Multiwii Serial Protocol (MSP).
@@ -640,6 +640,15 @@ export const parseName = (data: BuffDataView) => {
   return value;
 };
 
+export const composeSetName = (name: string) => {
+  let buffer: number[] = [];
+  const MSP_BUFFER_SIZE = 64;
+  for (let i = 0; i < name.length && i < MSP_BUFFER_SIZE; i++) {
+    buffer = push8(buffer, name.charCodeAt(i));
+  }
+  return Buffer.from(buffer);
+};
+
 export const parseUID = (data: BuffDataView): string => {
   const uid: number[] = [0, 0, 0];
   uid[0] = data.readU32();
@@ -672,6 +681,36 @@ export const parseBeeperConfig = (data: BuffDataView): MSPBeeperConfig => ({
   dshotBeaconConditionsMask: data.readU32(),
 });
 
+export interface MSPServoConfiguration {
+  min: number;
+  max: number;
+  middle: number;
+  rate: number;
+  indexOfChannelToForward: number;
+  reversedInputSources: number;
+}
+
+export const parseServoConfigurations = (data: BuffDataView): MSPServoConfiguration[] => {
+  const servoConfigurations: MSPServoConfiguration[] = [];
+
+  if (data.length() % 12 === 0) {
+    for (let i = 0; i < data.length(); i += 12) {
+      const servoConfiguration: MSPServoConfiguration = {
+        min: data.readU16(),
+        max: data.readU16(),
+        middle: data.readU16(),
+        rate: data.read8(),
+        indexOfChannelToForward: data.readU8(),
+        reversedInputSources: data.readU32(),
+      };
+
+      servoConfigurations.push(servoConfiguration);
+    }
+  }
+
+  return servoConfigurations;
+};
+
 export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
 
@@ -684,6 +723,12 @@ export const parseMsg = (code: number, payload: Buffer) => {
       return { code: MSPCodes.MSP_RAW_IMU, name: 'MSP_RAW_IMU', ...parseRawIMU(data) };
     case MSPCodes.MSP_SERVO:
       return { code: MSPCodes.MSP_SERVO, name: 'MSP_SERVO', servo: parseServo(data) };
+    case MSPCodes.MSP_SERVO_CONFIGURATIONS:
+      return {
+        code: MSPCodes.MSP_SERVO_CONFIGURATIONS,
+        name: 'MSP_SERVO_CONFIGURATIONS',
+        servoConfigurations: parseServoConfigurations(data),
+      };
     case MSPCodes.MSP_MOTOR:
       return { code: MSPCodes.MSP_MOTOR, name: 'MSP_MOTOR', motor: parseMotor(data) };
     case MSPCodes.MSP_MOTOR_TELEMETRY:
