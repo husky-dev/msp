@@ -198,8 +198,10 @@ export const MSPCodes = {
   MSP2_GET_LED_STRIP_CONFIG_VALUES: 0x3008,
   MSP2_SET_LED_STRIP_CONFIG_VALUES: 0x3009,
   MSP2_SENSOR_CONFIG_ACTIVE: 0x300a,
+};
 
-  // MSP2_GET_TEXT and MSP2_SET_TEXT variable types
+// MSP2_GET_TEXT and MSP2_SET_TEXT variable types
+export const msp2GetTextCodes = {
   PILOT_NAME: 1,
   CRAFT_NAME: 2,
   PID_PROFILE_NAME: 3,
