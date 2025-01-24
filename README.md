@@ -5,7 +5,6 @@
 ![Lint](https://github.com/husky-dev/msp/workflows/lint/badge.svg)
 ![Test](https://github.com/husky-dev/msp/workflows/test/badge.svg)
 
-
 Library for communicating with a Multiwii flight controller using the Multiwii Serial Protocol (MSP).
 
 ## Installation
