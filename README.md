@@ -1,8 +1,8 @@
 # Multiwii Serial Protocol
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Lint](https://github.com/husky-dev/msp/workflows/Lint/badge.svg)
-![Test](https://github.com/husky-dev/msp/workflows/Test/badge.svg)
+![Lint](https://github.com/husky-dev/msp/workflows/lint/badge.svg)
+![Test](https://github.com/husky-dev/msp/workflows/test/badge.svg)
 
 
 Library for communicating with a Multiwii flight controller using the Multiwii Serial Protocol (MSP).
