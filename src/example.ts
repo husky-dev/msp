@@ -21,7 +21,7 @@ const main = async () => {
     // console.log('getCompGPS', await msp.getCompGPS());
     // console.log('getApiVersion', await msp.getApiVersion());
     // console.log('getFcVariant', await msp.getFcVariant());
-    // console.log('getFcVersion', await msp.getFcVersion());
+    // console.log('getFcVersion', await msp.getFcVersion())2;
     // console.log('getBuildInfo', await msp.getBuildInfo());
     // console.log('getBoardInfo', await msp.getBoardInfo());
     // console.log('getName', await msp.getName());

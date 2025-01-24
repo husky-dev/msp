@@ -1,6 +1,11 @@
 import { MSPCodes } from './codes';
 import { BuffDataView, buffToDataView, push8 } from './utils';
 
+// Original doucmentation:
+// http://www.multiwii.com/wiki/index.php?title=Multiwii_Serial_Protocol
+// Betaflight extended documentation:
+// https://github.com/betaflight/betaflight/blob/master/src/main/msp/msp_protocol.h
+
 /**
  * Represents the status of the Multiwii Serial Protocol (MSP).
  */
@@ -35,7 +40,8 @@ export interface MSPStatusEx {
   i2cError: number;
   /** Bitmask indicating active sensors. Example: `3` (gyro + accelerometer) */
   activeSensors: number;
-  /** Current mode as a bitmask. Example: `1` (stabilized) */
+  /**
+    Current mode as a bitmask. Example: `1` (stabilized) */
   mode: number;
   /** Current profile index. Example: `1` */
   profile: number;

@@ -40,7 +40,7 @@ export const decodeMessage = (buff: Buffer): MSPDecodeResult => {
   return msgVersion === mspSymbols.PROTO_V1 ? decodeMessageV1(buff) : decodeMessageV2(buff);
 };
 
-const encodeMessageV1 = (code: number, data: Buffer) => {
+export const encodeMessageV1 = (code: number, data: Buffer) => {
   const dataLength = data.length;
   const bufSize = dataLength + 6;
   const bufOut = Buffer.alloc(bufSize);
@@ -62,7 +62,7 @@ const encodeMessageV1 = (code: number, data: Buffer) => {
   return bufOut;
 };
 
-const decodeMessageV1 = (buff: Buffer): MSPDecodeResult => {
+export const decodeMessageV1 = (buff: Buffer): MSPDecodeResult => {
   const symbol = buff[2];
   const code = buff[4];
   if (symbol === mspSymbols.UNSUPPORTED) {
@@ -78,7 +78,7 @@ const decodeMessageV1 = (buff: Buffer): MSPDecodeResult => {
   return { success: true, len, code, payload, checksum };
 };
 
-const encodeMessageV2 = (code: number, data: Buffer) => {
+export const encodeMessageV2 = (code: number, data: Buffer) => {
   const dataLength = data ? data.length : 0;
   // 9 bytes for protocol overhead
   const bufferSize = dataLength + 9;
@@ -98,7 +98,7 @@ const encodeMessageV2 = (code: number, data: Buffer) => {
   return bufferOut;
 };
 
-const decodeMessageV2 = (buff: Buffer): MSPDecodeResult => {
+export const decodeMessageV2 = (buff: Buffer): MSPDecodeResult => {
   const symbol = buff[2];
   const code = buff.readUInt16LE(4);
   if (symbol === mspSymbols.UNSUPPORTED) {
