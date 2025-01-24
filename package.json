@@ -26,7 +26,7 @@
     "lint:types": "tsc --noEmit --skipLibCheck",
     "lint:eslint": "eslint \"src/**\"",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -42,7 +42,7 @@
     "@typescript-eslint/eslint-plugin": "6.18.1",
     "@typescript-eslint/parser": "6.18.1",
     "eslint": "8.56.0",
-    "husky": "8.0.3",
+    "husky": "9.1.7",
     "lint-staged": "15.4.2",
     "prettier": "3.4.2",
     "ts-node": "10.9.2",
