@@ -1,6 +1,12 @@
 .editorconfig
+.eslintignore
+.eslintrc.js
+.github
 .gitignore
+.husky
 .prettier.js
+jest.config.ts
 node_modules
 src
 tsconfig.json
+yarn.lock
