@@ -1,5 +1,6 @@
 # Multiwii Serial Protocol
 
+![npm version](https://img.shields.io/npm/v/@husky-dev/msp)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Lint](https://github.com/husky-dev/msp/workflows/lint/badge.svg)
 ![Test](https://github.com/husky-dev/msp/workflows/test/badge.svg)
