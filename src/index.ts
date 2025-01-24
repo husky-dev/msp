@@ -157,7 +157,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
       throw new Error('Not connected');
     }
     const bufferOut = encodeMessage(code, payload);
-    await this.port.write(bufferOut);
+    this.port.write(bufferOut);
     return new Promise<BuffDataView>((resolve, reject) => {
       this.callbacks.push({
         code,
