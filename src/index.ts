@@ -185,7 +185,14 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the status of the flight controller
    * @see MSP_STATUS
-   * @todo Test
+   * @example
+   * {
+   *   cycleTime: 253,
+   *   i2cError: 0,
+   *   activeSensors: 35,
+   *   mode: 0,
+   *   profile: 0
+   * }
    */
   public async getStatus(): Promise<MSPStatus> {
     return parseStatus(await this.sendMessage(MSPCodes.MSP_STATUS));
@@ -194,7 +201,20 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the extended status of the flight controller
    * @see MSP_STATUS_EX
-   * @todo Test
+   * @example
+   *  {
+   *    cycleTime: 254,
+   *    i2cError: 0,
+   *    activeSensors: 35,
+   *    mode: 0,
+   *    profile: 0,
+   *    cpuload: 44,
+   *    numProfiles: 4,
+   *    rateProfile: 0,
+   *    armingDisableCount: 26,
+   *    armingDisableFlags: 1048580,
+   *    configStateFlag: 0
+   *  }
    */
   public async getStatusEx(): Promise<MSPStatusEx> {
     return parseStatusEx(await this.sendMessage(MSPCodes.MSP_STATUS_EX));
@@ -207,7 +227,12 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the raw IMU data
    * @see MSP_RAW_IMU
-   * @todo Test
+   * @example
+   * {
+   *   accelerometer: [ 0.00048828125, 0.01806640625, 0.25341796875 ],
+   *   gyroscope: [ 0.24390243902439027, 0, -0.48780487804878053 ],
+   *   magnetometer: [ 0, 0, 0 ]
+   * }
    */
   public async getRawIMU(): Promise<MSPRawIMU> {
     return parseRawIMU(await this.sendMessage(MSPCodes.MSP_RAW_IMU));
@@ -220,7 +245,8 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the servo data
    * @see MSP_SERVO
-   * @todo Test
+   * @example
+   * [ 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
    */
   public async getServo(): Promise<number[]> {
     return parseServo(await this.sendMessage(MSPCodes.MSP_SERVO));
@@ -231,7 +257,73 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the servo configuration
    * @see MSP_SERVO_CONFIGURATIONS
-   * @todo Test
+   * @example
+   * [
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   },
+   *   {
+   *     min: 1000,
+   *     max: 2000,
+   *     middle: 1500,
+   *     rate: 100,
+   *     indexOfChannelToForward: 255,
+   *     reversedInputSources: 0
+   *   }
+   * ]
    */
   public async getServoConfigurations(): Promise<MSPServoConfiguration[]> {
     return parseServoConfigurations(await this.sendMessage(MSPCodes.MSP_SERVO_CONFIGURATIONS));
@@ -246,7 +338,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the motor data
    * @see MSP_MOTOR
-   * @todo Test
+   * @example [ 1000, 1000, 1000, 1000, 0, 0, 0, 0 ]
    */
   public async getMotor(): Promise<number[]> {
     return parseMotor(await this.sendMessage(MSPCodes.MSP_MOTOR));
@@ -268,7 +360,16 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the motor config
    * @see MSP_MOTOR_CONFIG
-   * @todo Test
+   * @example
+   * {
+   *   minthrottle: 1070,
+   *   maxthrottle: 2000,
+   *   mincommand: 1000,
+   *   motorCount: 4,
+   *   motorPoles: 14,
+   *   useDshotTelemetry: true,
+   *   useEscSensor: true
+   * }
    */
   public async getMotorConfig(): Promise<MSPMotorConfig> {
     return parseMotorConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_CONFIG));
@@ -279,7 +380,41 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the motor telemetry
    * @see MSP_MOTOR_TELEMETRY
-   * @todo Test
+   * @example
+   * [
+   *   {
+   *     rpm: 0,
+   *     invalidPercent: 10000,
+   *     temperature: 0,
+   *     voltage: 0,
+   *     current: 0,
+   *     consumption: 0
+   *   },
+   *   {
+   *     rpm: 0,
+   *     invalidPercent: 10000,
+   *     temperature: 0,
+   *     voltage: 0,
+   *     current: 0,
+   *     consumption: 0
+   *   },
+   *   {
+   *     rpm: 0,
+   *     invalidPercent: 10000,
+   *     temperature: 0,
+   *     voltage: 0,
+   *     current: 0,
+   *     consumption: 0
+   *   },
+   *   {
+   *     rpm: 0,
+   *     invalidPercent: 10000,
+   *     temperature: 0,
+   *     voltage: 0,
+   *     current: 0,
+   *     consumption: 0
+   *   }
+   * ]
    */
   public async getMotorTelemetry(): Promise<MSPMotorTelemetry[]> {
     return parseMotorTelemetry(await this.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY));
@@ -299,7 +434,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * Retrieves the RC data. The data is an array of 8 channels with values between 1000 and 2000.
    * The first 4 channels are the sticks and the last 4 channels are the aux channels.
    * @see MSP_RC
-   * @todo Test
+   * @example  [ 1500, 1500, 1500,  885, 1675, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
    */
   public async getRc(): Promise<number[]> {
     return parseRC(await this.sendMessage(MSPCodes.MSP_RC));
@@ -320,7 +455,16 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the raw GPS data
    * @see MSP_RAW_GPS
-   * @todo Test
+   * @example
+   * {
+   *   fix: 0,
+   *   numSat: 0,
+   *   lat: 0,
+   *   lon: 0,
+   *   alt: 0,
+   *   speed: 0,
+   *   groundCourse: 0
+   * }
    */
   public async getRawGPS(): Promise<MSPRawGPS> {
     return parseRawGPS(await this.sendMessage(MSPCodes.MSP_RAW_GPS));
@@ -329,7 +473,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the compas GPS data
    * @see MSP_COMP_GPS
-   * @todo Test
+   * @example { distanceToHome: 0, directionToHome: 0, update: 0 }
    */
   public async getCompGPS(): Promise<MSPCompGps> {
     return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
@@ -357,7 +501,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the attitude data
    * @see MSP_ATTITUDE
-   * @todo Test
+   * @example [ 4.1, -0.1, 14.2 ]
    */
   public async getAttitude(): Promise<number[]> {
     return parseAttitude(await this.sendMessage(MSPCodes.MSP_ATTITUDE));
@@ -366,7 +510,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the altitude data
    * @see MSP_ALTITUDE
-   * @todo Test
+   * @example -0.14
    */
   public async getAltitude(): Promise<number> {
     return parseAltitude(await this.sendMessage(MSPCodes.MSP_ALTITUDE));
@@ -375,7 +519,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the sonar data
    * @see MSP_SONAR
-   * @todo Test
+   * @example 0
    */
   public async getSonar(): Promise<number> {
     return parseSonar(await this.sendMessage(MSPCodes.MSP_SONAR));
@@ -384,7 +528,13 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the analog data
    * @see MSP_ANALOG
-   * @todo Test
+   * @example
+   * {
+   *   voltage: 0.1,
+   *   mAhdrawn: 0,
+   *   rssi: 0,
+   *   amperage: 0
+   * }
    */
   public async getAnalog(): Promise<MSPAnalog> {
     return parseAnalog(await this.sendMessage(MSPCodes.MSP_ANALOG));
@@ -397,7 +547,15 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the voltage data
    * @see MSP_VOLTAGE_METERS
-   * @todo Test
+   * @example
+   * [
+   *   { id: 10, voltage: 0.1 },
+   *   { id: 50, voltage: 0 },
+   *   { id: 60, voltage: 0 },
+   *   { id: 61, voltage: 0 },
+   *   { id: 62, voltage: 0 },
+   *   { id: 63, voltage: 0 }
+   * ]
    */
   public async getVoltageMeters(): Promise<MSPVoltageMeter[]> {
     return parseVoltageMeters(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METERS));
@@ -406,7 +564,10 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the voltage meter config
    * @see MSP_VOLTAGE_METER_CONFIG
-   * @todo Test
+   * @example
+   * [
+   *   { id: 10, sensorType: 0, vbatscale: 110, vbatresdivval: 10, vbatresdivmultiplier: 1 }
+   * ];
    */
   public async getVoltageMeterConfig(): Promise<MSPVoltageMeterConfig[]> {
     return parseVoltageMeterConfig(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG));
@@ -422,7 +583,16 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the current meter data
    * @see MSP_CURRENT_METERS
-   * @todo Test
+   * @example
+   * [
+   *   { id: 10, mAhDrawn: 0, amperage: 0 },
+   *   { id: 80, mAhDrawn: 0, amperage: 0 },
+   *   { id: 50, mAhDrawn: 0, amperage: 0 },
+   *   { id: 60, mAhDrawn: 0, amperage: 0 },
+   *   { id: 61, mAhDrawn: 0, amperage: 0 },
+   *   { id: 62, mAhDrawn: 0, amperage: 0 },
+   *   { id: 63, mAhDrawn: 0, amperage: 0 }
+   * ]
    */
   public async getCurrentMeters(): Promise<MSPCurrentMeter[]> {
     return parseCurrentMeters(await this.sendMessage(MSPCodes.MSP_CURRENT_METERS));
@@ -431,7 +601,11 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the current meter config
    * @see MSP_CURRENT_METER_CONFIG
-   * @todo Test
+   * @example
+   * [
+   *   { id: 10, sensorType: 1, scale: 400, offset: 0 },
+   *   { id: 80, sensorType: 0, scale: 0, offset: 0 }
+   * ]
    */
   public async getCurrentMeterConfig(): Promise<MSPCurrentMeterConfig[]> {
     return parseCurrentMeterConfig(await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG));
@@ -447,7 +621,15 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the battery state
    * @see MSP_BATTERY_STATE
-   * @todo Test
+   * @example
+   * {
+   *   cellCount: 0,
+   *   capacity: 0,
+   *   voltage: 0.1,
+   *   mAhDrawn: 0,
+   *   amperage: 0,
+   *   batteryState: 3
+   * }
    */
   public async getBatteryState(): Promise<MSPBatteryState> {
     return parseBatteryState(await this.sendMessage(MSPCodes.MSP_BATTERY_STATE));
@@ -456,7 +638,15 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Retrieves the battery config
    * @see MSP_BATTERY_CONFIG
-   * @todo Test
+   * @example
+   * {
+   *   vbatmincellvoltage: 3.3,
+   *   vbatmaxcellvoltage: 4.3,
+   *   vbatwarningcellvoltage: 3.5,
+   *   capacity: 0,
+   *   voltageMeterSource: 1,
+   *   currentMeterSource: 1
+   * }
    */
   public async getBatteryConfig(): Promise<MSPBatteryConfig> {
     return parseBatteryConfig(await this.sendMessage(MSPCodes.MSP_BATTERY_CONFIG));
@@ -467,7 +657,11 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the API version of the flight controller
    * @see MSP_API_VERSION
-   * @todo Test
+   * @example
+   * {
+   *   mspProtocolVersion: 0,
+   *   apiVersion: '1.45.0'
+   * }
    */
   public async getApiVersion(): Promise<MSPApiVersion> {
     return parseApiVersion(await this.sendMessage(MSPCodes.MSP_API_VERSION));
@@ -476,7 +670,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the flight controller variant
    * @see MSP_FC_VARIANT
-   * @todo Test
+   * @example 'BTFL'
    */
   public async getFcVariant(): Promise<string> {
     return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT));
@@ -485,7 +679,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the flight controller version
    * @see MSP_FC_VERSION
-   * @todo Test
+   * @example '4.4.3'
    */
   public async getFcVersion(): Promise<string> {
     return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION));
@@ -494,7 +688,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the build info of the flight controller
    * @see MSP_BUILD_INFO
-   * @todo Test
+   * @example 'Nov 18 2023 06:49:34'
    */
   public async getBuildInfo(): Promise<string> {
     return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO));
@@ -503,7 +697,23 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the board info of the flight controller
    * @see MSP_BOARD_INFO
-   * @todo Test
+   * @example
+   * {
+   *   boardIdentifier: 'S405',
+   *   boardVersion: 0,
+   *   boardType: 2,
+   *   targetCapabilities: 55,
+   *   targetName: 'STM32F405',
+   *   boardName: 'SPEEDYBEEF405V4',
+   *   manufacturerId: 'SPBE',
+   *   signature: [
+   *     0, 0, 0, 0, 0, 0, 0, 0, 0,
+   *     0, 0, 0, 0, 0, 0, 0, 0, 0,
+   *     0, 0, 0, 0, 0, 0, 0, 0, 0,
+   *     0, 0, 0, 0, 0
+   *   ],
+   *   mcuTypeId: 1
+   * }
    */
   public async getBoardInfo(): Promise<MSPBoardInfo> {
     return parseBoardInfo(await this.sendMessage(MSPCodes.MSP_BOARD_INFO));
@@ -700,7 +910,12 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the beeper config of the flight controller
    * @see MSP_BEEPER_CONFIG
-   * @todo Test
+   * @example
+   * {
+   *   disabledMask: 131328,
+   *   dshotBeaconTone: 4,
+   *   dshotBeaconConditionsMask: 2
+   * }
    */
   public async getBeeperConfig(): Promise<MSPBeeperConfig> {
     return parseBeeperConfig(await this.sendMessage(MSPCodes.MSP_BEEPER_CONFIG));
@@ -713,7 +928,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the name of the flight controller
    * @see MSP_NAME
-   * @todo Test
+   * @example 'SDUA_123456'
    */
   public async getName(): Promise<string> {
     return parseName(await this.sendMessage(MSPCodes.MSP_NAME));
@@ -722,7 +937,6 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Set the name of the flight controller
    * @see MSP_SET_NAME
-   * @todo Test
    */
   public async setName(name: string): Promise<void> {
     await this.sendMessage(MSPCodes.MSP_SET_NAME, composeSetName(name));
@@ -731,7 +945,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   /**
    * Get the UID of the flight controller
    * @see MSP_UID
-   * @todo Test
+   * @example '3009386739576c95837562'
    */
   public async getUid(): Promise<string> {
     return parseUID(await this.sendMessage(MSPCodes.MSP_UID));
