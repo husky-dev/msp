@@ -5,7 +5,17 @@
  * https://github.com/betaflight/betaflight/blob/master/src/main/msp/msp_protocol.h
  */
 import { MSPCodes } from './codes';
-import { BuffDataView, buffToDataView, push8 } from './utils';
+import {
+  API_VERSION_1_42,
+  API_VERSION_1_43,
+  API_VERSION_1_45,
+  API_VERSION_1_46,
+  API_VERSION_1_47,
+  BuffDataView,
+  buffToDataView,
+  push8,
+} from './utils';
+import semver from 'semver';
 
 export interface MSPStatus {
   /** Cycle time in milliseconds. Example: `20` */
@@ -52,9 +62,11 @@ export interface MSPStatusEx {
   armingDisableFlags: number;
   /** Configuration state flag. Example: `1` (config changed) */
   configStateFlag: number;
+  /** CPU temperature in degrees Celsius. Example: `40` */
+  cpuTemp?: number;
 }
 
-export const parseStatusEx = (data: BuffDataView): MSPStatusEx => {
+export const parseStatusEx = (data: BuffDataView, apiVersion: string | undefined): MSPStatusEx => {
   const cycleTime = data.readU16();
   const i2cError = data.readU16();
   const activeSensors = data.readU16();
@@ -77,10 +89,12 @@ export const parseStatusEx = (data: BuffDataView): MSPStatusEx => {
   // Read config state flags - bits to indicate the state of the configuration, reboot required, etc.
   const configStateFlag = data.readU8();
 
-  // TODO: Read CPU temp, from API version 1.46
-  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_46)) {
-  //   FC.CONFIG.cpuTemp = data.readU16();
-  // }
+  // Read CPU temp, from API version 1.46
+  let cpuTemp;
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_46)) {
+    cpuTemp = data.readU16();
+  }
+
   return {
     cycleTime,
     i2cError,
@@ -93,6 +107,7 @@ export const parseStatusEx = (data: BuffDataView): MSPStatusEx => {
     armingDisableCount,
     armingDisableFlags,
     configStateFlag,
+    cpuTemp,
   };
 };
 
@@ -448,7 +463,7 @@ export interface MSPMotorConfig {
   useEscSensor?: boolean;
 }
 
-export const parseMotorConfig = (data: BuffDataView): MSPMotorConfig => {
+export const parseMotorConfig = (data: BuffDataView, apiVersion: string | undefined): MSPMotorConfig => {
   const msg: MSPMotorConfig = {
     minthrottle: data.readU16(),
     maxthrottle: data.readU16(),
@@ -458,12 +473,12 @@ export const parseMotorConfig = (data: BuffDataView): MSPMotorConfig => {
   msg.motorPoles = data.readU8();
   msg.useDshotTelemetry = data.readU8() !== 0;
   msg.useEscSensor = data.readU8() !== 0;
-  //   if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_42)) {
-  //     FC.MOTOR_CONFIG.motor_count = data.readU8();
-  //     FC.MOTOR_CONFIG.motor_poles = data.readU8();
-  //     FC.MOTOR_CONFIG.use_dshot_telemetry = data.readU8() != 0;
-  //     FC.MOTOR_CONFIG.use_esc_sensor = data.readU8() != 0;
-  // }
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_42)) {
+    msg.motorCount = data.readU8();
+    msg.motorPoles = data.readU8();
+    msg.useDshotTelemetry = data.readU8() != 0;
+    msg.useEscSensor = data.readU8() != 0;
+  }
   return msg;
 };
 
@@ -525,9 +540,15 @@ export interface MSPBoardInfo {
   signature: number[];
   /** MCU type ID. Example: `1` (specific MCU type) */
   mcuTypeId: number;
+  /** Configuration state. Example: `1` (config changed) */
+  configurationState?: number;
+  /** Sample rate in Hz. Example: `1000` */
+  sampleRateHz?: number;
+  /** Configuration problems. Example: `0` */
+  configurationProblems?: number;
 }
 
-export const parseBoardInfo = (data: BuffDataView): MSPBoardInfo => {
+export const parseBoardInfo = (data: BuffDataView, apiVersion: string | undefined): MSPBoardInfo => {
   const SIGNATURE_LENGTH = 32;
 
   let boardIdentifier: string = '';
@@ -550,17 +571,19 @@ export const parseBoardInfo = (data: BuffDataView): MSPBoardInfo => {
 
   const mcuTypeId = data.readU8();
 
-  // TODO: Parse board info additional data depending on API version
-  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_42)) {
-  //     FC.CONFIG.configurationState = data.readU8();
-  // }
+  let configurationState;
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_42)) {
+    configurationState = data.readU8();
+  }
 
-  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_43)) {
-  //     FC.CONFIG.sampleRateHz = data.readU16();
-  //     FC.CONFIG.configurationProblems = data.readU32();
-  // } else {
-  //     FC.CONFIG.configurationProblems = 0;
-  // }
+  let sampleRateHz;
+  let configurationProblems;
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_43)) {
+    sampleRateHz = data.readU16();
+    configurationProblems = data.readU32();
+  } else {
+    configurationProblems = 0;
+  }
 
   return {
     boardIdentifier,
@@ -572,6 +595,9 @@ export const parseBoardInfo = (data: BuffDataView): MSPBoardInfo => {
     manufacturerId,
     signature,
     mcuTypeId,
+    configurationState,
+    sampleRateHz,
+    configurationProblems,
   };
 };
 
@@ -1030,17 +1056,17 @@ export interface MSPSensorConfig {
 }
 
 // MSP_SENSOR_CONFIG
-export const parseSensorConfig = (data: BuffDataView): MSPSensorConfig => {
+export const parseSensorConfig = (data: BuffDataView, apiVersion: string | undefined): MSPSensorConfig => {
   const sensorConfig: MSPSensorConfig = {
     accHardware: data.readU8(),
     baroHardware: data.readU8(),
     magHardware: data.readU8(),
   };
 
-  // TODO: Introduced in API version 1.46
-  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_46)) {
-  //   sensorConfig.sonarHardware = data.readU8();
-  // }
+  // Introduced in API version 1.46
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_46)) {
+    sensorConfig.sonarHardware = data.readU8();
+  }
 
   return sensorConfig;
 };
@@ -1062,7 +1088,7 @@ export interface MSPSensorAlignment {
 }
 
 // MSP_SENSOR_ALIGNMENT
-export const parseSensorAlignment = (data: BuffDataView): MSPSensorAlignment => {
+export const parseSensorAlignment = (data: BuffDataView, apiVersion: string | undefined): MSPSensorAlignment => {
   const sensorAlignment: MSPSensorAlignment = {
     alignGyro: data.readU8(),
     alignAcc: data.readU8(),
@@ -1073,15 +1099,15 @@ export const parseSensorAlignment = (data: BuffDataView): MSPSensorAlignment => 
     gyro2Align: data.readU8(),
   };
 
-  // TODO: Introduced in API version 1.47
-  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_47)) {
-  //   sensorAlignment.gyroAlignRoll = data.read16() / 10;
-  //   sensorAlignment.gyroAlignPitch = data.read16() / 10;
-  //   sensorAlignment.gyroAlignYaw = data.read16() / 10;
-  //   sensorAlignment.magAlignRoll = data.read16() / 10;
-  //   sensorAlignment.magAlignPitch = data.read16() / 10;
-  //   sensorAlignment.magAlignYaw = data.read16() / 10;
-  // }
+  // Introduced in API version 1.47
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_47)) {
+    sensorAlignment.gyroAlignRoll = data.read16() / 10;
+    sensorAlignment.gyroAlignPitch = data.read16() / 10;
+    sensorAlignment.gyroAlignYaw = data.read16() / 10;
+    sensorAlignment.magAlignRoll = data.read16() / 10;
+    sensorAlignment.magAlignPitch = data.read16() / 10;
+    sensorAlignment.magAlignYaw = data.read16() / 10;
+  }
 
   return sensorAlignment;
 };
@@ -1120,7 +1146,7 @@ export interface MSPBlackboxConfig {
 }
 
 // MSP_BLACKBOX_CONFIG
-export const parseBlackboxConfig = (data: BuffDataView): MSPBlackboxConfig => {
+export const parseBlackboxConfig = (data: BuffDataView, apiVersion: string | undefined): MSPBlackboxConfig => {
   const blackboxConfig: MSPBlackboxConfig = {
     supported: (data.readU8() & 1) !== 0,
     blackboxDevice: data.readU8(),
@@ -1132,10 +1158,10 @@ export const parseBlackboxConfig = (data: BuffDataView): MSPBlackboxConfig => {
   // Introduced in API version 1.44
   blackboxConfig.blackboxSampleRate = data.readU8();
 
-  // TODO: Introduced in API version 1.45
-  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_45)) {
-  //   blackboxConfig.blackboxDisabledMask = data.readU32();
-  // }
+  // Introduced in API version 1.45
+  if (apiVersion && semver.gte(apiVersion, API_VERSION_1_45)) {
+    blackboxConfig.blackboxDisabledMask = data.readU32();
+  }
 
   return blackboxConfig;
 };
@@ -1373,13 +1399,13 @@ export type MSPMsg =
   | MSPMsgWithPayload<MSPCodes.MSP_BLACKBOX_CONFIG, MSPBlackboxConfig>
   | MSPMsgWithPayload<MSPCodes.MSP_OSD_CANVAS, MSPOsdCanvas>;
 
-export const parseMsg = (code: number, payload: Buffer): MSPMsg | undefined => {
+export const parseMsg = (code: number, payload: Buffer, apiVersion?: string): MSPMsg | undefined => {
   const data = buffToDataView(payload);
   switch (code) {
     case MSPCodes.MSP_STATUS:
       return { code: MSPCodes.MSP_STATUS, payload: parseStatus(data) };
     case MSPCodes.MSP_STATUS_EX:
-      return { code: MSPCodes.MSP_STATUS_EX, payload: parseStatusEx(data) };
+      return { code: MSPCodes.MSP_STATUS_EX, payload: parseStatusEx(data, apiVersion) };
     case MSPCodes.MSP_RAW_IMU:
       return { code: MSPCodes.MSP_RAW_IMU, payload: parseRawIMU(data) };
     case MSPCodes.MSP_SERVO:
@@ -1431,7 +1457,7 @@ export const parseMsg = (code: number, payload: Buffer): MSPMsg | undefined => {
     case MSPCodes.MSP_SET_BATTERY_CONFIG:
       return { code: MSPCodes.MSP_SET_BATTERY_CONFIG };
     case MSPCodes.MSP_MOTOR_CONFIG:
-      return { code: MSPCodes.MSP_MOTOR_CONFIG, payload: parseMotorConfig(data) };
+      return { code: MSPCodes.MSP_MOTOR_CONFIG, payload: parseMotorConfig(data, apiVersion) };
     case MSPCodes.MSP_DISPLAYPORT:
       return { code: MSPCodes.MSP_DISPLAYPORT };
     case MSPCodes.MSP_SET_RAW_RC:
@@ -1513,7 +1539,7 @@ export const parseMsg = (code: number, payload: Buffer): MSPMsg | undefined => {
     case MSPCodes.MSP_BUILD_INFO:
       return { code: MSPCodes.MSP_BUILD_INFO, payload: parseBuildInfo(data) };
     case MSPCodes.MSP_BOARD_INFO:
-      return { code: MSPCodes.MSP_BOARD_INFO, payload: parseBoardInfo(data) };
+      return { code: MSPCodes.MSP_BOARD_INFO, payload: parseBoardInfo(data, apiVersion) };
     case MSPCodes.MSP_NAME:
       return { code: MSPCodes.MSP_NAME, payload: parseName(data) };
     case MSPCodes.MSP_UID:
@@ -1553,13 +1579,13 @@ export const parseMsg = (code: number, payload: Buffer): MSPMsg | undefined => {
     case MSPCodes.MSP_RX_MAP:
       return { code: MSPCodes.MSP_RX_MAP, payload: parseRxMap(data) };
     case MSPCodes.MSP_SENSOR_CONFIG:
-      return { code: MSPCodes.MSP_SENSOR_CONFIG, payload: parseSensorConfig(data) };
+      return { code: MSPCodes.MSP_SENSOR_CONFIG, payload: parseSensorConfig(data, apiVersion) };
     case MSPCodes.MSP_SENSOR_ALIGNMENT:
-      return { code: MSPCodes.MSP_SENSOR_ALIGNMENT, payload: parseSensorAlignment(data) };
+      return { code: MSPCodes.MSP_SENSOR_ALIGNMENT, payload: parseSensorAlignment(data, apiVersion) };
     case MSPCodes.MSP_PID:
       return { code: MSPCodes.MSP_PID, payload: parsePid(data) };
     case MSPCodes.MSP_BLACKBOX_CONFIG:
-      return { code: MSPCodes.MSP_BLACKBOX_CONFIG, payload: parseBlackboxConfig(data) };
+      return { code: MSPCodes.MSP_BLACKBOX_CONFIG, payload: parseBlackboxConfig(data, apiVersion) };
     case MSPCodes.MSP_OSD_CANVAS:
       return { code: MSPCodes.MSP_OSD_CANVAS, payload: parseOsdCanvas(data) };
   }

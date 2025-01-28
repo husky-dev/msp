@@ -36,6 +36,7 @@
     ]
   },
   "dependencies": {
+    "semver": "7.6.3",
     "serialport": "13.0.0"
   },
   "devDependencies": {
