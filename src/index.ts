@@ -310,54 +310,6 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *     rate: 100,
    *     indexOfChannelToForward: 255,
    *     reversedInputSources: 0
-   *   },
-   *   {
-   *     min: 1000,
-   *     max: 2000,
-   *     middle: 1500,
-   *     rate: 100,
-   *     indexOfChannelToForward: 255,
-   *     reversedInputSources: 0
-   *   },
-   *   {
-   *     min: 1000,
-   *     max: 2000,
-   *     middle: 1500,
-   *     rate: 100,
-   *     indexOfChannelToForward: 255,
-   *     reversedInputSources: 0
-   *   },
-   *   {
-   *     min: 1000,
-   *     max: 2000,
-   *     middle: 1500,
-   *     rate: 100,
-   *     indexOfChannelToForward: 255,
-   *     reversedInputSources: 0
-   *   },
-   *   {
-   *     min: 1000,
-   *     max: 2000,
-   *     middle: 1500,
-   *     rate: 100,
-   *     indexOfChannelToForward: 255,
-   *     reversedInputSources: 0
-   *   },
-   *   {
-   *     min: 1000,
-   *     max: 2000,
-   *     middle: 1500,
-   *     rate: 100,
-   *     indexOfChannelToForward: 255,
-   *     reversedInputSources: 0
-   *   },
-   *   {
-   *     min: 1000,
-   *     max: 2000,
-   *     middle: 1500,
-   *     rate: 100,
-   *     indexOfChannelToForward: 255,
-   *     reversedInputSources: 0
    *   }
    * ]
    */
@@ -457,6 +409,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   // TODO: MSP2_MOTOR_OUTPUT_REORDERING
+
   // TODO: MSP2_SET_MOTOR_OUTPUT_REORDERING
 
   /**

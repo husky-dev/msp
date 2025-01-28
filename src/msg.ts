@@ -6,9 +6,6 @@ import { BuffDataView, buffToDataView, push8 } from './utils';
 // Betaflight extended documentation:
 // https://github.com/betaflight/betaflight/blob/master/src/main/msp/msp_protocol.h
 
-/**
- * Represents the status of the Multiwii Serial Protocol (MSP).
- */
 export interface MSPStatus {
   /** Cycle time in milliseconds. Example: `20` */
   cycleTime: number;
@@ -30,9 +27,6 @@ export const parseStatus = (data: BuffDataView): MSPStatus => ({
   profile: data.readU8(),
 });
 
-/**
- * Represents the extended status of the Multiwii Serial Protocol (MSP).
- */
 export interface MSPStatusEx {
   /** Cycle time in milliseconds. Example: `20` */
   cycleTime: number;
@@ -101,9 +95,6 @@ export const parseStatusEx = (data: BuffDataView): MSPStatusEx => {
   };
 };
 
-/**
- * Represents the raw sensor data from the flight controller.
- */
 export interface MSPRawIMU {
   /** Accelerometer data as an array of XYZ values. Example: `[0.13720703125, -0.0546875, 0.20458984375]` */
   accelerometer: number[];
@@ -156,9 +147,6 @@ export const parseMotor = (data: BuffDataView) => {
   return motor;
 };
 
-/**
- * Represents the telemetry data for a motor in Multiwii Serial Protocol.
- */
 export interface MSPMotorTelemetry {
   /** Revolutions per minute of the motor. Example: `4500` */
   rpm: number;
@@ -192,7 +180,6 @@ export const parseMotorTelemetry = (data: BuffDataView): MSPMotorTelemetry[] => 
 
 /**
  * Parses buffer data to extract remote control (RC) channel values.
- * @param {BuffDataView} data - The buffer data to be parsed.
  * @returns {number[]} An array of RC channel values.
  */
 export const parseRC = (data: BuffDataView) => {
@@ -204,9 +191,6 @@ export const parseRC = (data: BuffDataView) => {
   return channels;
 };
 
-/**
- * Represents the raw GPS data from the flight controller.
- */
 export interface MSPRawGPS {
   /** GPS fix type. 0: No Fix, 1: 2D Fix, 2: 3D Fix. Example: `2` */
   fix: number;
@@ -234,9 +218,6 @@ export const parseRawGPS = (data: BuffDataView): MSPRawGPS => ({
   groundCourse: data.readU16(),
 });
 
-/**
- * Represents the computed GPS data for navigation purposes.
- */
 export interface MSPCompGps {
   /** Distance to home point in meters. Example: `100` */
   distanceToHome: number;
@@ -252,31 +233,18 @@ export const parseCompGPS = (data: BuffDataView): MSPCompGps => ({
   update: data.readU8(),
 });
 
-/**
- * Parses buffer data into an array representing attitude (orientation) in degrees.
- * @param {BuffDataView} data - The buffer data to be parsed.
- * @returns {number[]} An array of attitude values in degrees for x (roll), y (pitch), and z (yaw) axes.
- */
 export const parseAttitude = (data: BuffDataView) => [
   data.read16() / 10, // Roll: Divides by 10 to convert to degrees.
   data.read16() / 10, // Pitch: Divides by 10 to convert to degrees.
   data.read16() / 10, // Yaw: Divides by 10 to convert to degrees.
 ];
 
-/**
- * Parses buffer data to extract altitude information.
- * @param {BuffDataView} data - The buffer data to be parsed.
- * @returns {number} Altitude value in meters with two decimal places.
- */
 export const parseAltitude = (data: BuffDataView) =>
   // Converts the 32-bit value to altitude in meters with correct scale factor.
   parseFloat((data.read32() / 100.0).toFixed(2));
 
 export const parseSonar = (data: BuffDataView) => data.read32();
 
-/**
- * Represents the analog data readings in Multiwii Serial Protocol.
- */
 export interface MSPAnalog {
   /** Battery voltage in volts. Example: `11.1` */
   voltage: number;
@@ -296,9 +264,6 @@ export const parseAnalog = (data: BuffDataView): MSPAnalog => ({
   // FC.ANALOG.voltage = data.readU16() / 100; ???
 });
 
-/**
- * Represents a voltage meter reading in Multiwii Serial Protocol.
- */
 export interface MSPVoltageMeter {
   /** Identifier for the voltage meter. Example: `1` */
   id: number;
@@ -319,9 +284,6 @@ export const parseVoltageMeters = (data: BuffDataView): MSPVoltageMeter[] => {
   return voltageMeters;
 };
 
-/**
- * Represents a current meter reading in Multiwii Serial Protocol.
- */
 export interface MSPCurrentMeter {
   /** Identifier for the current meter. Example: `1` */
   id: number;
@@ -344,9 +306,6 @@ export const parseCurrentMeters = (data: BuffDataView) => {
   return currentMeters;
 };
 
-/**
- * Represents the state of a battery in Multiwii Serial Protocol.
- */
 export interface MSPBatteryState {
   /** Number of cells in the battery. Example: `4` */
   cellCount: number;
@@ -372,9 +331,6 @@ export const parseBatteryState = (data: BuffDataView): MSPBatteryState => ({
   // FC.BATTERY_STATE.voltage = data.readU16() / 100; ???
 });
 
-/**
- * Represents the configuration settings for a voltage meter in Multiwii Serial Protocol.
- */
 export interface MSPVoltageMeterConfig {
   /** Identifier for the voltage meter. Example: `1` */
   id: number;
@@ -412,9 +368,6 @@ export const parseVoltageMeterConfig = (data: BuffDataView): MSPVoltageMeterConf
   return voltageMeterConfigs;
 };
 
-/**
- * Represents the configuration settings for a current meter in Multiwii Serial Protocol.
- */
 export interface MSPCurrentMeterConfig {
   /** Identifier for the current meter. Example: `1` */
   id: number;
@@ -450,9 +403,6 @@ export const parseCurrentMeterConfig = (data: BuffDataView): MSPCurrentMeterConf
   return currentMeterConfigs;
 };
 
-/**
- * Represents the battery configuration settings in Multiwii Serial Protocol.
- */
 export interface MSPBatteryConfig {
   /** Minimum cell voltage for battery in volts. Example: `3.3` */
   vbatmincellvoltage: number;
@@ -480,9 +430,6 @@ export const parseBatteryConfig = (data: BuffDataView): MSPBatteryConfig => ({
   // FC.BATTERY_CONFIG.vbatwarningcellvoltage = data.readU16() / 100; ???
 });
 
-/**
- * Represents the motor configuration settings in Multiwii Serial Protocol.
- */
 export interface MSPMotorConfig {
   /** Minimum throttle value. Example: `1000` */
   minthrottle: number;
@@ -519,9 +466,6 @@ export const parseMotorConfig = (data: BuffDataView): MSPMotorConfig => {
   return msg;
 };
 
-/**
- * Represents the API version information in Multiwii Serial Protocol.
- */
 export interface MSPApiVersion {
   /** MSP protocol version number. Example: `2` */
   mspProtocolVersion: number;
@@ -561,9 +505,6 @@ export const parseBuildInfo = (data: BuffDataView) => {
   return String.fromCharCode.apply(null, buff);
 };
 
-/**
- * Represents the board information in Multiwii Serial Protocol.
- */
 export interface MSPBoardInfo {
   /** Unique identifier for the board. Example: `"AFNA"` */
   boardIdentifier: string;
@@ -669,9 +610,6 @@ export const parseGetText = (data: BuffDataView) => {
   return { type: textType, value };
 };
 
-/**
- * Represents the beeper configuration in Multiwii Serial Protocol.
- */
 export interface MSPBeeperConfig {
   /** Disabled mask for beepers. Example: `0b101010` */
   disabledMask: number;
@@ -744,9 +682,6 @@ export const parseModeRanges = (data: BuffDataView): MSPModeRange[] => {
   return modeRanges;
 };
 
-/**
- * Represents the extra mode range configuration in Multiwii Serial Protocol.
- */
 export interface MSPModeRangeExtra {
   /** Identifier for the mode range. Example: `1` */
   id: number;
@@ -825,9 +760,6 @@ export const parseGpsConfig = (data: BuffDataView): MSPGpsConfig => {
   return gpsConfig;
 };
 
-/**
- * Represents the GPS rescue configuration in Multiwii Serial Protocol.
- */
 export interface MSPGpsRescueConfig {
   angle: number;
   returnAltitudeM: number;
@@ -875,9 +807,6 @@ export const parseGpsRescue = (data: BuffDataView): MSPGpsRescueConfig => {
   return gpsRescueConfig;
 };
 
-/**
- * Represents the GPS satellite information in Multiwii Serial Protocol.
- */
 export interface MSPGpsSvInfo {
   /** Number of channels. Example: `12` */
   numCh: number;
@@ -915,9 +844,6 @@ export const parseGpsSvInfo = (data: BuffDataView): MSPGpsSvInfo => {
   };
 };
 
-/**
- * Represents the VTX configuration in Multiwii Serial Protocol.
- */
 export interface MSPVtxConfig {
   vtxType: number;
   vtxBand: number;
@@ -995,9 +921,6 @@ export const parseVtxTableBand = (data: BuffDataView): MSPVtxTableBand => {
   };
 };
 
-/**
- * Represents the VTX table power level in Multiwii Serial Protocol.
- */
 export interface MSPVtxTablePowerLevel {
   vtxTablePowerLevelNumber: number;
   vtxTablePowerLevelValue: number;
@@ -1022,9 +945,6 @@ export const parseVtxTablePowerLevel = (data: BuffDataView): MSPVtxTablePowerLev
   };
 };
 
-/**
- * Represents the LED color configuration in Multiwii Serial Protocol.
- */
 export interface MSPLedColor {
   h: number;
   s: number;
@@ -1048,9 +968,6 @@ export const parseLedColors = (data: BuffDataView): MSPLedColor[] => {
   return ledColors;
 };
 
-/**
- * Represents the LED strip mode color in Multiwii Serial Protocol.
- */
 export interface MSPLedStripModeColor {
   mode: number;
   direction: number;
@@ -1074,9 +991,6 @@ export const parseLedStripModeColor = (data: BuffDataView): MSPLedStripModeColor
   return ledStripModeColors;
 };
 
-/**
- * Represents the RX fail-safe configuration in Multiwii Serial Protocol.
- */
 export interface MSPRxFailConfig {
   mode: number;
   value: number;
@@ -1107,9 +1021,6 @@ export const parseRxMap = (data: BuffDataView): number[] => {
   return rcMap;
 };
 
-/**
- * Represents the sensor configuration in Multiwii Serial Protocol.
- */
 export interface MSPSensorConfig {
   accHardware: number;
   baroHardware: number;
@@ -1133,9 +1044,6 @@ export const parseSensorConfig = (data: BuffDataView): MSPSensorConfig => {
   return sensorConfig;
 };
 
-/**
- * Represents the sensor alignment configuration in Multiwii Serial Protocol.
- */
 export interface MSPSensorAlignment {
   alignGyro: number;
   alignAcc: number;
@@ -1177,9 +1085,6 @@ export const parseSensorAlignment = (data: BuffDataView): MSPSensorAlignment => 
   return sensorAlignment;
 };
 
-/**
- * Represents the PID configuration in Multiwii Serial Protocol.
- */
 export interface MSPPid {
   p: number;
   i: number;
@@ -1203,9 +1108,6 @@ export const parsePid = (data: BuffDataView): MSPPid[] => {
   return pids;
 };
 
-/**
- * Represents the blackbox configuration in Multiwii Serial Protocol.
- */
 export interface MSPBlackboxConfig {
   supported: boolean;
   blackboxDevice: number;
@@ -1237,9 +1139,6 @@ export const parseBlackboxConfig = (data: BuffDataView): MSPBlackboxConfig => {
   return blackboxConfig;
 };
 
-/**
- * Represents the OSD canvas configuration in Multiwii Serial Protocol.
- */
 export interface MSPOsdCanvas {
   videoColsHD: number;
   videoRowsHD: number;
