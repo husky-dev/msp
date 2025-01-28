@@ -48,7 +48,8 @@ const main = async () => {
     // console.log('getSensorConfig', await msp.getSensorConfig());
     // console.log('getSensorAlignment', await msp.getSensorAlignment());
     // console.log('getPid', await msp.getPid());
-    console.log('getBlackboxConfig', await msp.getBlackboxConfig());
+    // console.log('getBlackboxConfig', await msp.getBlackboxConfig());
+    console.log('getOsdCanvas', await msp.getOsdCanvas());
 
     // console.log('getGpsRescue', await msp.getGpsRescue()); // Debug
   };

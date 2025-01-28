@@ -88,6 +88,7 @@ import {
   parsePid,
   MSPBlackboxConfig,
   parseBlackboxConfig,
+  parseOsdCanvas,
 } from './msg';
 import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16 } from './utils';
 
@@ -1056,7 +1057,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   blackboxSampleRate: 1
    * }
    */
-  public async getBlackboxConfig(): Promise<MSPBlackboxConfig> {
+  public async getBlackboxConfig() {
     return parseBlackboxConfig(await this.sendMessage(MSPCodes.MSP_BLACKBOX_CONFIG));
   }
 
@@ -1066,7 +1067,19 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * OSD
    */
 
-  // TODO: MSP_OSD_CANVAS
+  /**
+   * Retrieves the OSD canvas data
+   * @see MSP_OSD_CANVAS
+   * @example
+   * {
+   *   videoColsHD: 30,
+   *   videoRowsHD: 16,
+   *   videoBufferCharsHD: 480
+   * }
+   */
+  public async getOsdCanvas() {
+    return parseOsdCanvas(await this.sendMessage(MSPCodes.MSP_OSD_CANVAS));
+  }
   // TODO: MSP_SET_OSD_CANVAS
 
   // TODO: MSP_OSD_CONFIG

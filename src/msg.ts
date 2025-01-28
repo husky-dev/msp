@@ -1237,17 +1237,34 @@ export const parseBlackboxConfig = (data: BuffDataView): MSPBlackboxConfig => {
   return blackboxConfig;
 };
 
+/**
+ * Represents the OSD canvas configuration in Multiwii Serial Protocol.
+ */
+export interface MSPOsdCanvas {
+  videoColsHD: number;
+  videoRowsHD: number;
+  videoBufferCharsHD: number;
+}
+
+// MSP_OSD_CANVAS
+export const parseOsdCanvas = (data: BuffDataView): MSPOsdCanvas => {
+  const videoColsHD = data.readU8();
+  const videoRowsHD = data.readU8();
+  const videoBufferCharsHD = videoColsHD * videoRowsHD;
+
+  return {
+    videoColsHD,
+    videoRowsHD,
+    videoBufferCharsHD,
+  };
+};
+
 // TODO: MSP_RC_TUNING
 // TODO: MSP_COMPASS_CONFIG
 // TODO: MSP_LED_STRIP_CONFIG
 // TODO: MSP_RX_CONFIG
 // TODO: MSP_PID_ADVANCED
 
-// TODO: MSP_BLACKBOX_CONFIG
-// TODO: MSP_OSD_CANVAS
-// TODO: MSP_OSD_CONFIG
-// TODO: MSP_OSD_CHAR_READ
-// TODO: MSP_OSD_CHAR_WRITE
 // TODO: PILOT_NAME
 // TODO: CRAFT_NAME
 // TODO: PID_PROFILE_NAME
@@ -1355,6 +1372,9 @@ export const parseBlackboxConfig = (data: BuffDataView): MSPBlackboxConfig => {
 
 // Not documented:
 // TODO: MSP_SERVO_MIX_RULES
+// TODO: MSP_OSD_CONFIG
+// TODO: MSP_OSD_CHAR_READ
+// TODO: MSP_OSD_CHAR_WRITE
 
 export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
@@ -1548,6 +1568,8 @@ export const parseMsg = (code: number, payload: Buffer) => {
       return { code: MSPCodes.MSP_PID, name: 'MSP_PID', pids: parsePid(data) };
     case MSPCodes.MSP_BLACKBOX_CONFIG:
       return { code: MSPCodes.MSP_BLACKBOX_CONFIG, name: 'MSP_BLACKBOX_CONFIG', ...parseBlackboxConfig(data) };
+    case MSPCodes.MSP_OSD_CANVAS:
+      return { code: MSPCodes.MSP_OSD_CANVAS, name: 'MSP_OSD_CANVAS', ...parseOsdCanvas(data) };
   }
   throw new Error(`Unknown MSP code: ${code}`);
 };
