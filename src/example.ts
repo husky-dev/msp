@@ -3,8 +3,10 @@ import { MultiwiiSerialProtocol, MSPMsg } from './index';
 const main = async () => {
   const ports = await MultiwiiSerialProtocol.list();
   if (!ports.length) return console.log('No ports found');
+
   const devices = ports.filter((itm) => itm.manufacturer === 'Betaflight');
   if (!devices.length) return console.log('No Betaflight devices found');
+
   const device = devices[0];
   const msp = new MultiwiiSerialProtocol({
     path: device.path,
