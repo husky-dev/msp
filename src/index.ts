@@ -53,6 +53,41 @@ import {
   parseUID,
   parseVoltageMeterConfig,
   parseVoltageMeters,
+  parseModeRanges,
+  MSPModeRange,
+  parseModeRangesExtra,
+  MSPModeRangeExtra,
+  MSPMotor3DConfig,
+  parseMotor3DConfig,
+  MSPRcDeadbandConfig,
+  parseRcDeadbandConfig,
+  MSPGpsConfig,
+  parseGpsConfig,
+  MSPGpsRescueConfig,
+  parseGpsRescue,
+  MSPGpsSvInfo,
+  parseGpsSvInfo,
+  MSPVtxConfig,
+  parseVtxConfig,
+  MSPVtxTableBand,
+  parseVtxTableBand,
+  MSPVtxTablePowerLevel,
+  parseVtxTablePowerLevel,
+  MSPLedColor,
+  parseLedColors,
+  MSPLedStripModeColor,
+  parseLedStripModeColor,
+  MSPRxFailConfig,
+  parseRxFailConfig,
+  parseRxMap,
+  MSPSensorConfig,
+  parseSensorConfig,
+  MSPSensorAlignment,
+  parseSensorAlignment,
+  MSPPid,
+  parsePid,
+  MSPBlackboxConfig,
+  parseBlackboxConfig,
 } from './msg';
 import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16 } from './utils';
 
@@ -423,7 +458,20 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP2_MOTOR_OUTPUT_REORDERING
   // TODO: MSP2_SET_MOTOR_OUTPUT_REORDERING
 
-  // TODO: MSP_MOTOR_3D_CONFIG
+  /**
+   * Retrieves the motor 3D config
+   * @see MSP_MOTOR_3D_CONFIG
+   * @example
+   * {
+   *   deadband3dLow: 1406,
+   *   deadband3dHigh: 1514,
+   *   neutral: 1460
+   * }
+   */
+  public async getMotor3DConfig(): Promise<MSPMotor3DConfig> {
+    return parseMotor3DConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_3D_CONFIG));
+  }
+
   // TODO: MSP_SET_MOTOR_3D_CONFIG
 
   /**
@@ -445,7 +493,21 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP_RC_TUNING
   // TODO: MSP_SET_RC_TUNING
 
-  // TODO: MSP_RC_DEADBAND
+  /**
+   * Retrieves the RC deadband configuration
+   * @see MSP_RC_DEADBAND
+   * @example
+   * {
+   *   deadband: 0,
+   *   yawDeadband: 0,
+   *   altHoldDeadband: 40,
+   *   deadband3dThrottle: 50
+   * }
+   */
+  public async getRcDeadbandConfig(): Promise<MSPRcDeadbandConfig> {
+    return parseRcDeadbandConfig(await this.sendMessage(MSPCodes.MSP_RC_DEADBAND));
+  }
+
   // TODO: MSP_SET_RC_DEADBAND
 
   /**
@@ -479,13 +541,46 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
   }
 
-  // TODO: MSP_GPS_CONFIG
+  /**
+   * Retrieves the GPS config
+   * @see MSP_GPS_CONFIG
+   * @example
+   * {
+   *   provider: 1,
+   *   ubloxSbas: 5,
+   *   autoConfig: 1,
+   *   autoBaud: 0,
+   *   homePointOnce: 0,
+   *   ubloxUseGalileo: 0
+   * }
+   */
+  public async getGpsConfig(): Promise<MSPGpsConfig> {
+    return parseGpsConfig(await this.sendMessage(MSPCodes.MSP_GPS_CONFIG));
+  }
+
   // TODO: MSP_SET_GPS_CONFIG
 
-  // TODO: MSP_GPS_RESCUE
+  public async getGpsRescue(): Promise<MSPGpsRescueConfig> {
+    return parseGpsRescue(await this.sendMessage(MSPCodes.MSP_GPS_RESCUE));
+  }
+
   // TODO: MSP_SET_GPS_RESCUE
 
-  // TODO: MSP_GPS_SV_INFO
+  /**
+   * Retrieves the GPS SV info
+   * @see MSP_GPS_SV_INFO
+   * @example
+   * {
+   *   numCh: 0,
+   *   chn: [],
+   *   svid: [],
+   *   quality: [],
+   *   cno: []
+   * }
+   */
+  public async getGpsSvInfo(): Promise<MSPGpsSvInfo> {
+    return parseGpsSvInfo(await this.sendMessage(MSPCodes.MSP_GPS_SV_INFO));
+  }
 
   /**
    * Compas
@@ -723,13 +818,43 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * VTX
    */
 
-  // TODO: MSP_VTX_CONFIG
+  /**
+   * Retrieves the VTX config
+   * @see MSP_VTX_CONFIG
+   * @example
+   * {
+   *   vtxType: 3,
+   *   vtxBand: 3,
+   *   vtxChannel: 2,
+   *   vtxPower: 2,
+   *   vtxPitMode: false,
+   *   vtxFrequency: 5685,
+   *   vtxDeviceReady: false,
+   *   vtxLowPowerDisarm: 2,
+   *   vtxPitModeFrequency: 0,
+   *   vtxTableAvailable: true,
+   *   vtxTableBands: 6,
+   *   vtxTableChannels: 8,
+   *   vtxTablePowerLevels: 4,
+   *   vtxTableClear: false
+   * }
+   */
+  public async getVtxConfig(): Promise<MSPVtxConfig> {
+    return parseVtxConfig(await this.sendMessage(MSPCodes.MSP_VTX_CONFIG));
+  }
+
   // TODO: MSP_SET_VTX_CONFIG
 
-  // TODO: MSP_VTXTABLE_BAND
+  public async getVtxTableBand(): Promise<MSPVtxTableBand> {
+    return parseVtxTableBand(await this.sendMessage(MSPCodes.MSP_VTXTABLE_BAND));
+  }
+
   // TODO: MSP_SET_VTXTABLE_BAND
 
-  // TODO: MSP_VTXTABLE_POWERLEVEL
+  public async getVtxTablePowerLevel(): Promise<MSPVtxTablePowerLevel> {
+    return parseVtxTablePowerLevel(await this.sendMessage(MSPCodes.MSP_VTXTABLE_POWERLEVEL));
+  }
+
   // TODO: MSP_SET_VTXTABLE_POWERLEVEL
 
   // TODO: MSP2_GET_VTX_DEVICE_STATUS
@@ -741,10 +866,58 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP_LED_STRIP_CONFIG
   // TODO: MSP_SET_LED_STRIP_CONFIG
 
-  // TODO: MSP_LED_COLORS
+  /**
+   * Retrieves the LED colors
+   * @see MSP_LED_COLORS
+   * @example
+   * [
+   *   { h: 0, s: 0, v: 0 },
+   *   { h: 0, s: 255, v: 255 },
+   *   { h: 0, s: 0, v: 255 },
+   *   { h: 30, s: 0, v: 255 },
+   *   { h: 60, s: 0, v: 255 },
+   *   { h: 90, s: 0, v: 255 },
+   *   { h: 120, s: 0, v: 255 },
+   *   { h: 150, s: 0, v: 255 },
+   *   { h: 180, s: 0, v: 255 },
+   *   { h: 210, s: 0, v: 255 },
+   *   { h: 240, s: 0, v: 255 },
+   *   { h: 270, s: 0, v: 255 },
+   *   { h: 300, s: 0, v: 255 },
+   *   { h: 330, s: 0, v: 255 },
+   *   { h: 0, s: 0, v: 0 },
+   *   { h: 0, s: 0, v: 0 }
+   * ]
+   */
+  public async getLedColors(): Promise<MSPLedColor[]> {
+    return parseLedColors(await this.sendMessage(MSPCodes.MSP_LED_COLORS));
+  }
+
   // TODO: MSP_SET_LED_COLORS
 
-  // TODO: MSP_LED_STRIP_MODECOLOR
+  /**
+   * Retrieves the LED strip mode color
+   * @see MSP_LED_STRIP_MODECOLOR
+   * @example
+   * [
+   *   { mode: 0, direction: 0, color: 1 },
+   *   { mode: 0, direction: 1, color: 11 },
+   *   { mode: 0, direction: 2, color: 2 },
+   *   { mode: 0, direction: 3, color: 13 },
+   *   { mode: 0, direction: 4, color: 10 },
+   *   { mode: 0, direction: 5, color: 3 },
+   *   { mode: 1, direction: 0, color: 5 },
+   *   { mode: 1, direction: 1, color: 11 },
+   *   { mode: 1, direction: 2, color: 3 },
+   *   { mode: 1, direction: 3, color: 13 },
+   *   { mode: 1, direction: 4, color: 10 },
+   *   { mode: 1, direction: 5, color: 3 },
+   * ]
+   */
+  public async getLedStripModeColor(): Promise<MSPLedStripModeColor[]> {
+    return parseLedStripModeColor(await this.sendMessage(MSPCodes.MSP_LED_STRIP_MODECOLOR));
+  }
+
   // TODO: MSP_SET_LED_STRIP_MODECOLOR
 
   // TODO: MSP2_SET_LED_STRIP_CONFIG_VALUES
@@ -757,20 +930,87 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: MSP_RX_CONFIG
   // TODO: MSP_SET_RX_CONFIG
 
-  // TODO: MSP_RXFAIL_CONFIG
+  /**
+   * Retrieves the RX fail config
+   * @see MSP_RXFAIL_CONFIG
+   * @example
+   * [
+   *   { mode: 0, value: 1500 },
+   *   { mode: 0, value: 1500 },
+   *   { mode: 0, value: 1500 },
+   *   { mode: 0, value: 875 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 },
+   *   { mode: 1, value: 1500 }
+   * ]
+   */
+  public async getRxFailConfig(): Promise<MSPRxFailConfig[]> {
+    return parseRxFailConfig(await this.sendMessage(MSPCodes.MSP_RXFAIL_CONFIG));
+  }
+
   // TODO: MSP_SET_RXFAIL_CONFIG
 
-  // TODO: MSP_RX_MAP
+  /**
+   * Retrieves the RX map
+   * @see MSP_RX_MAP
+   * [
+   *   0, 1, 3, 2,
+   *   4, 5, 6, 7
+   * ]
+   */
+  public async getRxMap(): Promise<number[]> {
+    return parseRxMap(await this.sendMessage(MSPCodes.MSP_RX_MAP));
+  }
+
   // TODO: MSP_SET_RX_MAP
 
   /**
    * Sensor
    */
 
-  // TODO: MSP_SENSOR_CONFIG
+  /**
+   * Retrieves the sensor data
+   * @see MSP_SENSOR
+   * @example
+   * {
+   *   accHardware: 0,
+   *   baroHardware: 0,
+   *   magHardware: 0
+   * }
+   */
+  public async getSensorConfig(): Promise<MSPSensorConfig> {
+    return parseSensorConfig(await this.sendMessage(MSPCodes.MSP_SENSOR_CONFIG));
+  }
+
   // TODO: MSP_SET_SENSOR_CONFIG
 
-  // TODO: MSP_SENSOR_ALIGNMENT
+  /**
+   * Retrieves the sensor alignment
+   * @see MSP_SENSOR_ALIGNMENT
+   * @example
+   * {
+   *   alignGyro: 2,
+   *   alignAcc: 2,
+   *   alignMag: 0,
+   *   gyroDetectionFlags: 1,
+   *   gyroToUse: 0,
+   *   gyro1Align: 2,
+   *   gyro2Align: 1
+   * }
+   */
+  public async getSensorAlignment(): Promise<MSPSensorAlignment> {
+    return parseSensorAlignment(await this.sendMessage(MSPCodes.MSP_SENSOR_ALIGNMENT));
+  }
+
   // TODO: MSP_SET_SENSOR_ALIGNMENT
 
   // TODO: MSP2_SENSOR_CONFIG_ACTIVE
@@ -779,7 +1019,21 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * PID
    */
 
-  // TODO: MSP_PID
+  /**
+   * Retrieves the PID data
+   * @see MSP_PID
+   * [
+   *   { p: 45, i: 80, d: 36 },
+   *   { p: 47, i: 84, d: 41 },
+   *   { p: 45, i: 80, d: 0 },
+   *   { p: 50, i: 50, d: 75 },
+   *   { p: 40, i: 0, d: 0 }
+   * ]
+   */
+  public async getPid(): Promise<MSPPid[]> {
+    return parsePid(await this.sendMessage(MSPCodes.MSP_PID));
+  }
+
   // TODO: MSP_SET_PID
 
   // TODO: MSP_PID_ADVANCED
@@ -789,7 +1043,23 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * Blackbox
    */
 
-  // TODO: MSP_BLACKBOX_CONFIG
+  /**
+   * Retrieves the blackbox config
+   * @see MSP_BLACKBOX_CONFIG
+   * @example
+   * {
+   *   supported: true,
+   *   blackboxDevice: 2,
+   *   blackboxRateNum: 1,
+   *   blackboxRateDenom: 2,
+   *   blackboxPDenom: 64,
+   *   blackboxSampleRate: 1
+   * }
+   */
+  public async getBlackboxConfig(): Promise<MSPBlackboxConfig> {
+    return parseBlackboxConfig(await this.sendMessage(MSPCodes.MSP_BLACKBOX_CONFIG));
+  }
+
   // TODO: MSP_SET_BLACKBOX_CONFIG
 
   /**
@@ -830,8 +1100,71 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   // TODO: BUILD_KEY
   // TODO: MSP_SET_CHANNEL_FORWARDING
 
-  // TODO: MSP_MODE_RANGES
-  // TODO: MSP_MODE_RANGES_EXTRA
+  /**
+   * Retrieves the mode ranges configuration from the flight controller.
+   * The mode ranges define the activation ranges for specific flight modes based
+   * on auxiliary (AUX) channel values.
+   * @see MSP_MODE_RANGES
+   * @example
+   * [
+   *   { id: 0, auxChannelIndex: 0, range: { start: 1700, end: 2100 } },
+   *   { id: 1, auxChannelIndex: 1, range: { start: 900, end: 1300 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 13, auxChannelIndex: 5, range: { start: 1700, end: 2100 } },
+   *   { id: 26, auxChannelIndex: 3, range: { start: 1900, end: 2100 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } },
+   *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } }
+   * ]
+   */
+  public async getModeRanges(): Promise<MSPModeRange[]> {
+    return parseModeRanges(await this.sendMessage(MSPCodes.MSP_MODE_RANGES));
+  }
+
+  /**
+   * Retrieves the extended mode ranges configuration from the flight controller.
+   * The extended mode ranges provide additional configuration options for specific flight modes.
+   * @see MSP_MODE_RANGES_EXTRA
+   * @example
+   * [
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 1, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 13, modeLogic: 0, linkedTo: 0 },
+   *   { id: 26, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 },
+   *   { id: 0, modeLogic: 0, linkedTo: 0 }
+   * ]
+   */
+  public async getModeRangesExtra(): Promise<MSPModeRangeExtra[]> {
+    return parseModeRangesExtra(await this.sendMessage(MSPCodes.MSP_MODE_RANGES_EXTRA));
+  }
+
   // TODO: MSP_SET_MODE_RANGE
   // TODO: MSP_ADJUSTMENT_RANGES
   // TODO: MSP_SET_ADJUSTMENT_RANGE

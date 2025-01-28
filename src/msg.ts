@@ -717,6 +717,645 @@ export const parseServoConfigurations = (data: BuffDataView): MSPServoConfigurat
   return servoConfigurations;
 };
 
+export interface MSPModeRange {
+  id: number;
+  auxChannelIndex: number;
+  range: {
+    start: number;
+    end: number;
+  };
+}
+
+// MSP_MODE_RANGES
+export const parseModeRanges = (data: BuffDataView): MSPModeRange[] => {
+  const modeRanges: MSPModeRange[] = [];
+  const modeRangeCount = data.length() / 4; // 4 bytes per item.
+  for (let i = 0; i < modeRangeCount; i++) {
+    const modeRange: MSPModeRange = {
+      id: data.readU8(),
+      auxChannelIndex: data.readU8(),
+      range: {
+        start: 900 + data.readU8() * 25,
+        end: 900 + data.readU8() * 25,
+      },
+    };
+    modeRanges.push(modeRange);
+  }
+  return modeRanges;
+};
+
+/**
+ * Represents the extra mode range configuration in Multiwii Serial Protocol.
+ */
+export interface MSPModeRangeExtra {
+  /** Identifier for the mode range. Example: `1` */
+  id: number;
+  /** Logic for the mode. Example: `0` (specific logic type) */
+  modeLogic: number;
+  /** Linked mode identifier. Example: `2` */
+  linkedTo: number;
+}
+
+export const parseModeRangesExtra = (data: BuffDataView): MSPModeRangeExtra[] => {
+  const modeRangesExtra: MSPModeRangeExtra[] = [];
+  const modeRangeExtraCount = data.readU8();
+  for (let i = 0; i < modeRangeExtraCount; i++) {
+    const modeRangeExtra: MSPModeRangeExtra = {
+      id: data.readU8(),
+      modeLogic: data.readU8(),
+      linkedTo: data.readU8(),
+    };
+    modeRangesExtra.push(modeRangeExtra);
+  }
+  return modeRangesExtra;
+};
+
+export interface MSPMotor3DConfig {
+  /** Low deadband value for 3D mode. Example: `1000` */
+  deadband3dLow: number;
+  /** High deadband value for 3D mode. Example: `2000` */
+  deadband3dHigh: number;
+  /** Neutral value for 3D mode. Example: `1500` */
+  neutral: number;
+}
+
+// MSP_MOTOR_3D_CONFIG
+export const parseMotor3DConfig = (data: BuffDataView): MSPMotor3DConfig => ({
+  deadband3dLow: data.readU16(),
+  deadband3dHigh: data.readU16(),
+  neutral: data.readU16(),
+});
+
+export interface MSPRcDeadbandConfig {
+  deadband: number;
+  yawDeadband: number;
+  altHoldDeadband: number;
+  deadband3dThrottle: number;
+}
+
+// MSP_RC_DEADBAND
+export const parseRcDeadbandConfig = (data: BuffDataView): MSPRcDeadbandConfig => ({
+  deadband: data.readU8(),
+  yawDeadband: data.readU8(),
+  altHoldDeadband: data.readU8(),
+  deadband3dThrottle: data.readU16(),
+});
+
+export interface MSPGpsConfig {
+  provider: number;
+  ubloxSbas: number;
+  autoConfig: number;
+  autoBaud: number;
+  homePointOnce?: number;
+  ubloxUseGalileo?: number;
+}
+
+// MSP_GPS_CONFIG
+export const parseGpsConfig = (data: BuffDataView): MSPGpsConfig => {
+  const gpsConfig: MSPGpsConfig = {
+    provider: data.readU8(),
+    ubloxSbas: data.readU8(),
+    autoConfig: data.readU8(),
+    autoBaud: data.readU8(),
+  };
+  // Introduced in API version 1.43
+  gpsConfig.homePointOnce = data.readU8();
+  gpsConfig.ubloxUseGalileo = data.readU8();
+
+  return gpsConfig;
+};
+
+/**
+ * Represents the GPS rescue configuration in Multiwii Serial Protocol.
+ */
+export interface MSPGpsRescueConfig {
+  angle: number;
+  returnAltitudeM: number;
+  descentDistanceM: number;
+  groundSpeed: number;
+  throttleMin: number;
+  throttleMax: number;
+  throttleHover: number;
+  sanityChecks: number;
+  minSats: number;
+  ascendRate?: number;
+  descendRate?: number;
+  allowArmingWithoutFix?: number;
+  altitudeMode?: number;
+  minStartDistM?: number;
+  initialClimbM?: number;
+}
+
+// MSP_GPS_RESCUE
+export const parseGpsRescue = (data: BuffDataView): MSPGpsRescueConfig => {
+  const gpsRescueConfig: MSPGpsRescueConfig = {
+    angle: data.readU16(),
+    returnAltitudeM: data.readU16(),
+    descentDistanceM: data.readU16(),
+    groundSpeed: data.readU16(),
+    throttleMin: data.readU16(),
+    throttleMax: data.readU16(),
+    throttleHover: data.readU16(),
+    sanityChecks: data.readU8(),
+    minSats: data.readU8(),
+  };
+
+  // Introduced in API version 1.43
+  gpsRescueConfig.ascendRate = data.readU16();
+  gpsRescueConfig.descendRate = data.readU16();
+  gpsRescueConfig.allowArmingWithoutFix = data.readU8();
+  gpsRescueConfig.altitudeMode = data.readU8();
+
+  // Introduced in API version 1.44
+  gpsRescueConfig.minStartDistM = data.readU16();
+
+  // Introduced in API version 1.46
+  gpsRescueConfig.initialClimbM = data.readU16();
+
+  return gpsRescueConfig;
+};
+
+/**
+ * Represents the GPS satellite information in Multiwii Serial Protocol.
+ */
+export interface MSPGpsSvInfo {
+  /** Number of channels. Example: `12` */
+  numCh: number;
+  /** Array of channel numbers. Example: `[1, 2, 3, ...]` */
+  chn: number[];
+  /** Array of satellite IDs. Example: `[1, 2, 3, ...]` */
+  svid: number[];
+  /** Array of quality indicators. Example: `[1, 2, 3, ...]` */
+  quality: number[];
+  /** Array of carrier-to-noise ratios. Example: `[1, 2, 3, ...]` */
+  cno: number[];
+}
+
+// MSP_GPS_SV_INFO
+export const parseGpsSvInfo = (data: BuffDataView): MSPGpsSvInfo => {
+  const numCh = data.readU8();
+  const chn: number[] = [];
+  const svid: number[] = [];
+  const quality: number[] = [];
+  const cno: number[] = [];
+
+  for (let i = 0; i < numCh; i++) {
+    chn.push(data.readU8());
+    svid.push(data.readU8());
+    quality.push(data.readU8());
+    cno.push(data.readU8());
+  }
+
+  return {
+    numCh,
+    chn,
+    svid,
+    quality,
+    cno,
+  };
+};
+
+/**
+ * Represents the VTX configuration in Multiwii Serial Protocol.
+ */
+export interface MSPVtxConfig {
+  vtxType: number;
+  vtxBand: number;
+  vtxChannel: number;
+  vtxPower: number;
+  vtxPitMode: boolean;
+  vtxFrequency: number;
+  vtxDeviceReady: boolean;
+  vtxLowPowerDisarm: number;
+  vtxPitModeFrequency?: number;
+  vtxTableAvailable?: boolean;
+  vtxTableBands?: number;
+  vtxTableChannels?: number;
+  vtxTablePowerLevels?: number;
+  vtxTableClear?: boolean;
+}
+
+// MSP_VTX_CONFIG
+export const parseVtxConfig = (data: BuffDataView): MSPVtxConfig => {
+  const vtxConfig: MSPVtxConfig = {
+    vtxType: data.readU8(),
+    vtxBand: data.readU8(),
+    vtxChannel: data.readU8(),
+    vtxPower: data.readU8(),
+    vtxPitMode: data.readU8() !== 0,
+    vtxFrequency: data.readU16(),
+    vtxDeviceReady: data.readU8() !== 0,
+    vtxLowPowerDisarm: data.readU8(),
+  };
+
+  // Introduced in API version 1.42
+  vtxConfig.vtxPitModeFrequency = data.readU16();
+  vtxConfig.vtxTableAvailable = data.readU8() !== 0;
+  vtxConfig.vtxTableBands = data.readU8();
+  vtxConfig.vtxTableChannels = data.readU8();
+  vtxConfig.vtxTablePowerLevels = data.readU8();
+  vtxConfig.vtxTableClear = false;
+
+  return vtxConfig;
+};
+
+export interface MSPVtxTableBand {
+  vtxTableBandNumber: number;
+  vtxTableBandName: string;
+  vtxTableBandLetter: string;
+  vtxTableBandIsFactoryBand: boolean;
+  vtxTableBandFrequencies: number[];
+}
+
+// MSP_VTXTABLE_BAND
+export const parseVtxTableBand = (data: BuffDataView): MSPVtxTableBand => {
+  const vtxTableBandNumber = data.readU8();
+
+  const bandNameLength = data.readU8();
+  let vtxTableBandName = '';
+  for (let i = 0; i < bandNameLength; i++) {
+    vtxTableBandName += String.fromCharCode(data.readU8());
+  }
+
+  const vtxTableBandLetter = String.fromCharCode(data.readU8());
+  const vtxTableBandIsFactoryBand = data.readU8() !== 0;
+
+  const bandFrequenciesLength = data.readU8();
+  const vtxTableBandFrequencies: number[] = [];
+  for (let i = 0; i < bandFrequenciesLength; i++) {
+    vtxTableBandFrequencies.push(data.readU16());
+  }
+
+  return {
+    vtxTableBandNumber,
+    vtxTableBandName,
+    vtxTableBandLetter,
+    vtxTableBandIsFactoryBand,
+    vtxTableBandFrequencies,
+  };
+};
+
+/**
+ * Represents the VTX table power level in Multiwii Serial Protocol.
+ */
+export interface MSPVtxTablePowerLevel {
+  vtxTablePowerLevelNumber: number;
+  vtxTablePowerLevelValue: number;
+  vtxTablePowerLevelLabel: string;
+}
+
+// MSP_VTXTABLE_POWERLEVEL
+export const parseVtxTablePowerLevel = (data: BuffDataView): MSPVtxTablePowerLevel => {
+  const vtxTablePowerLevelNumber = data.readU8();
+  const vtxTablePowerLevelValue = data.readU16();
+
+  const powerLabelLength = data.readU8();
+  let vtxTablePowerLevelLabel = '';
+  for (let i = 0; i < powerLabelLength; i++) {
+    vtxTablePowerLevelLabel += String.fromCharCode(data.readU8());
+  }
+
+  return {
+    vtxTablePowerLevelNumber,
+    vtxTablePowerLevelValue,
+    vtxTablePowerLevelLabel,
+  };
+};
+
+/**
+ * Represents the LED color configuration in Multiwii Serial Protocol.
+ */
+export interface MSPLedColor {
+  h: number;
+  s: number;
+  v: number;
+}
+
+// MSP_LED_COLORS
+export const parseLedColors = (data: BuffDataView): MSPLedColor[] => {
+  const ledColors: MSPLedColor[] = [];
+  const ledColorCount = data.length() / 4;
+
+  for (let i = 0; i < ledColorCount; i++) {
+    const color: MSPLedColor = {
+      h: data.readU16(),
+      s: data.readU8(),
+      v: data.readU8(),
+    };
+    ledColors.push(color);
+  }
+
+  return ledColors;
+};
+
+/**
+ * Represents the LED strip mode color in Multiwii Serial Protocol.
+ */
+export interface MSPLedStripModeColor {
+  mode: number;
+  direction: number;
+  color: number;
+}
+
+// MSP_LED_STRIP_MODECOLOR
+export const parseLedStripModeColor = (data: BuffDataView): MSPLedStripModeColor[] => {
+  const ledStripModeColors: MSPLedStripModeColor[] = [];
+  const colorCount = data.length() / 3;
+
+  for (let i = 0; i < colorCount; i++) {
+    const modeColor: MSPLedStripModeColor = {
+      mode: data.readU8(),
+      direction: data.readU8(),
+      color: data.readU8(),
+    };
+    ledStripModeColors.push(modeColor);
+  }
+
+  return ledStripModeColors;
+};
+
+/**
+ * Represents the RX fail-safe configuration in Multiwii Serial Protocol.
+ */
+export interface MSPRxFailConfig {
+  mode: number;
+  value: number;
+}
+
+// MSP_RXFAIL_CONFIG
+export const parseRxFailConfig = (data: BuffDataView): MSPRxFailConfig[] => {
+  const rxFailConfig: MSPRxFailConfig[] = [];
+  const channelCount = data.length() / 3;
+
+  for (let i = 0; i < channelCount; i++) {
+    const rxfailChannel: MSPRxFailConfig = {
+      mode: data.readU8(),
+      value: data.readU16(),
+    };
+    rxFailConfig.push(rxfailChannel);
+  }
+
+  return rxFailConfig;
+};
+
+// MSP_RX_MAP
+export const parseRxMap = (data: BuffDataView): number[] => {
+  const rcMap: number[] = [];
+  for (let i = 0; i < data.length(); i++) {
+    rcMap.push(data.readU8());
+  }
+  return rcMap;
+};
+
+/**
+ * Represents the sensor configuration in Multiwii Serial Protocol.
+ */
+export interface MSPSensorConfig {
+  accHardware: number;
+  baroHardware: number;
+  magHardware: number;
+  sonarHardware?: number;
+}
+
+// MSP_SENSOR_CONFIG
+export const parseSensorConfig = (data: BuffDataView): MSPSensorConfig => {
+  const sensorConfig: MSPSensorConfig = {
+    accHardware: data.readU8(),
+    baroHardware: data.readU8(),
+    magHardware: data.readU8(),
+  };
+
+  // TODO: Introduced in API version 1.46
+  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_46)) {
+  //   sensorConfig.sonarHardware = data.readU8();
+  // }
+
+  return sensorConfig;
+};
+
+/**
+ * Represents the sensor alignment configuration in Multiwii Serial Protocol.
+ */
+export interface MSPSensorAlignment {
+  alignGyro: number;
+  alignAcc: number;
+  alignMag: number;
+  gyroDetectionFlags: number;
+  gyroToUse: number;
+  gyro1Align: number;
+  gyro2Align: number;
+  gyroAlignRoll?: number;
+  gyroAlignPitch?: number;
+  gyroAlignYaw?: number;
+  magAlignRoll?: number;
+  magAlignPitch?: number;
+  magAlignYaw?: number;
+}
+
+// MSP_SENSOR_ALIGNMENT
+export const parseSensorAlignment = (data: BuffDataView): MSPSensorAlignment => {
+  const sensorAlignment: MSPSensorAlignment = {
+    alignGyro: data.readU8(),
+    alignAcc: data.readU8(),
+    alignMag: data.readU8(),
+    gyroDetectionFlags: data.readU8(),
+    gyroToUse: data.readU8(),
+    gyro1Align: data.readU8(),
+    gyro2Align: data.readU8(),
+  };
+
+  // TODO: Introduced in API version 1.47
+  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_47)) {
+  //   sensorAlignment.gyroAlignRoll = data.read16() / 10;
+  //   sensorAlignment.gyroAlignPitch = data.read16() / 10;
+  //   sensorAlignment.gyroAlignYaw = data.read16() / 10;
+  //   sensorAlignment.magAlignRoll = data.read16() / 10;
+  //   sensorAlignment.magAlignPitch = data.read16() / 10;
+  //   sensorAlignment.magAlignYaw = data.read16() / 10;
+  // }
+
+  return sensorAlignment;
+};
+
+/**
+ * Represents the PID configuration in Multiwii Serial Protocol.
+ */
+export interface MSPPid {
+  p: number;
+  i: number;
+  d: number;
+}
+
+// MSP_PID
+export const parsePid = (data: BuffDataView): MSPPid[] => {
+  const pids: MSPPid[] = [];
+  const pidCount = data.length() / 3;
+
+  for (let i = 0; i < pidCount; i++) {
+    const pid: MSPPid = {
+      p: data.readU8(),
+      i: data.readU8(),
+      d: data.readU8(),
+    };
+    pids.push(pid);
+  }
+
+  return pids;
+};
+
+/**
+ * Represents the blackbox configuration in Multiwii Serial Protocol.
+ */
+export interface MSPBlackboxConfig {
+  supported: boolean;
+  blackboxDevice: number;
+  blackboxRateNum: number;
+  blackboxRateDenom: number;
+  blackboxPDenom: number;
+  blackboxSampleRate?: number;
+  blackboxDisabledMask?: number;
+}
+
+// MSP_BLACKBOX_CONFIG
+export const parseBlackboxConfig = (data: BuffDataView): MSPBlackboxConfig => {
+  const blackboxConfig: MSPBlackboxConfig = {
+    supported: (data.readU8() & 1) !== 0,
+    blackboxDevice: data.readU8(),
+    blackboxRateNum: data.readU8(),
+    blackboxRateDenom: data.readU8(),
+    blackboxPDenom: data.readU16(),
+  };
+
+  // Introduced in API version 1.44
+  blackboxConfig.blackboxSampleRate = data.readU8();
+
+  // TODO: Introduced in API version 1.45
+  // if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_45)) {
+  //   blackboxConfig.blackboxDisabledMask = data.readU32();
+  // }
+
+  return blackboxConfig;
+};
+
+// TODO: MSP_RC_TUNING
+// TODO: MSP_COMPASS_CONFIG
+// TODO: MSP_LED_STRIP_CONFIG
+// TODO: MSP_RX_CONFIG
+// TODO: MSP_PID_ADVANCED
+
+// TODO: MSP_BLACKBOX_CONFIG
+// TODO: MSP_OSD_CANVAS
+// TODO: MSP_OSD_CONFIG
+// TODO: MSP_OSD_CHAR_READ
+// TODO: MSP_OSD_CHAR_WRITE
+// TODO: PILOT_NAME
+// TODO: CRAFT_NAME
+// TODO: PID_PROFILE_NAME
+// TODO: RATE_PROFILE_NAME
+// TODO: BUILD_KEY
+// TODO: MSP_ADJUSTMENT_RANGES
+// TODO: MSP_BOXIDS
+// TODO: MSP_BOXNAMES
+// TODO: MSP_CALCULATE_SIMPLIFIED_DTERM
+// TODO: MSP_CALCULATE_SIMPLIFIED_GYRO
+// TODO: MSP_CALCULATE_SIMPLIFIED_PID
+// TODO: MSP_COPY_PROFILE
+// TODO: MSP_DATAFLASH_ERASE
+// TODO: MSP_DATAFLASH_READ
+// TODO: MSP_DATAFLASH_SUMMARY
+// TODO: MSP_DEBUG
+// TODO: MSP_DISPLAYPORT
+// TODO: MSP_EEPROM_WRITE
+// TODO: MSP_ACC_CALIBRATION
+// TODO: MSP_MAG_CALIBRATION
+// TODO: MSP_MISC
+// TODO: MSP_MULTIPLE_MSP
+// TODO: MSP_PIDNAMES
+// TODO: MSP_RESET_CONF
+// TODO: MSP_SDCARD_SUMMARY
+// TODO: MSP_SELECT_SETTING
+// TODO: MSP_RSSI_CONFIG
+// TODO: MSP_ADVANCED_CONFIG
+// TODO: MSP_FILTER_CONFIG
+// TODO: MSP_FAILSAFE_CONFIG
+// TODO: MSP_CF_SERIAL_CONFIG
+// TODO: MSP_TRANSPONDER_CONFIG
+// TODO: MSP_SIMPLIFIED_TUNING
+// TODO: MSP_VALIDATE_SIMPLIFIED_TUNING
+// TODO: MSP_BOARD_ALIGNMENT_CONFIG
+// TODO: MSP_PID_CONTROLLER
+// TODO: MSP_LOOP_TIME
+// TODO: MSP_ARMING_CONFIG
+// TODO: MSP_ARMING_DISABLE
+// TODO: MSP_MIXER_CONFIG
+// TODO: MSP_ACC_TRIM
+// TODO: MSP_FEATURE_CONFIG
+
+// Setters (will do later):
+// TODO: MSP_SET_SERVO_CONFIGURATION
+// TODO: MSP_SET_MOTOR_CONFIG
+// TODO: MSP_SET_MOTOR_3D_CONFIG
+// TODO: MSP_SET_RAW_RC
+// TODO: MSP_SET_RC_TUNING
+// TODO: MSP_SET_RC_DEADBAND
+// TODO: MSP_SET_GPS_CONFIG
+// TODO: MSP_SET_GPS_RESCUE
+// TODO: MSP_SET_COMPASS_CONFIG
+// TODO: MSP_SET_BATTERY_CONFIG
+// TODO: MSP_SET_VTX_CONFIG
+// TODO: MSP_SET_VTXTABLE_BAND
+// TODO: MSP_SET_VTXTABLE_POWERLEVEL
+// TODO: MSP_SET_LED_STRIP_CONFIG
+// TODO: MSP_SET_LED_COLORS
+// TODO: MSP_SET_LED_STRIP_MODECOLOR
+// TODO: MSP_SET_RX_CONFIG
+// TODO: MSP_SET_RXFAIL_CONFIG
+// TODO: MSP_SET_RX_MAP
+// TODO: MSP_SET_SENSOR_CONFIG
+// TODO: MSP_SET_SENSOR_ALIGNMENT
+// TODO: MSP_SET_PID
+// TODO: MSP_SET_PID_ADVANCED
+// TODO: MSP_SET_BLACKBOX_CONFIG
+// TODO: MSP_SET_OSD_CANVAS
+// TODO: MSP_SET_OSD_CONFIG
+// TODO: MSP_SET_CHANNEL_FORWARDING
+// TODO: MSP_SET_MODE_RANGE
+// TODO: MSP_SET_ADJUSTMENT_RANGE
+// TODO: MSP_SET_RTC
+// TODO: MSP_SET_RESET_CURR_PID
+// TODO: MSP_SET_RSSI_CONFIG
+// TODO: MSP_SET_ADVANCED_CONFIG
+// TODO: MSP_SET_FILTER_CONFIG
+// TODO: MSP_SET_FAILSAFE_CONFIG
+// TODO: MSP_SET_CF_SERIAL_CONFIG
+// TODO: MSP_SET_TRANSPONDER_CONFIG
+// TODO: MSP_SET_SIMPLIFIED_TUNING
+// TODO: MSP_SET_BOARD_ALIGNMENT_CONFIG
+// TODO: MSP_SET_PID_CONTROLLER
+// TODO: MSP_SET_LOOP_TIME
+// TODO: MSP_SET_ARMING_CONFIG
+// TODO: MSP_SET_MIXER_CONFIG
+// TODO: MSP_SET_ACC_TRIM
+// TODO: MSP_SET_FEATURE_CONFIG
+// TODO: MSP_SET_BEEPER_CONFIG
+// TODO: MSP_SET_REBOOT
+
+// MSP2
+// TODO: MSP2_MOTOR_OUTPUT_REORDERING
+// TODO: MSP2_SET_MOTOR_OUTPUT_REORDERING
+// TODO: MSP2_SENSOR_CONFIG_ACTIVE
+// TODO: MSP2_GET_TEXT
+// TODO: MSP2_SET_TEXT
+// TODO: MSP2_SEND_DSHOT_COMMAND
+// TODO: MSP2_COMMON_SERIAL_CONFIG
+// TODO: MSP2_COMMON_SET_SERIAL_CONFIG
+// TODO: MSP2_GET_VTX_DEVICE_STATUS
+// TODO: MSP2_SET_LED_STRIP_CONFIG_VALUES
+// TODO: MSP2_GET_LED_STRIP_CONFIG_VALUES
+
+// Not documented:
+// TODO: MSP_SERVO_MIX_RULES
+
 export const parseMsg = (code: number, payload: Buffer) => {
   const data = buffToDataView(payload);
 
@@ -869,6 +1508,46 @@ export const parseMsg = (code: number, payload: Buffer) => {
       return { code: MSPCodes.MSP2_SET_TEXT, name: 'MSP2_SET_TEXT' };
     case MSPCodes.MSP_BEEPER_CONFIG:
       return { code: MSPCodes.MSP_BEEPER_CONFIG, name: 'MSP_BEEPER_CONFIG', ...parseBeeperConfig(data) };
+    case MSPCodes.MSP_MODE_RANGES:
+      return { code: MSPCodes.MSP_MODE_RANGES, name: 'MSP_MODE_RANGES', modeRanges: parseModeRanges(data) };
+    case MSPCodes.MSP_MODE_RANGES_EXTRA:
+      return { code: MSPCodes.MSP_MODE_RANGES_EXTRA, name: 'MSP_MODE_RANGES_EXTRA', modeRangesExtra: parseModeRangesExtra(data) };
+    case MSPCodes.MSP_MOTOR_3D_CONFIG:
+      return { code: MSPCodes.MSP_MOTOR_3D_CONFIG, name: 'MSP_MOTOR_3D_CONFIG', ...parseMotor3DConfig(data) };
+    case MSPCodes.MSP_RC_DEADBAND:
+      return { code: MSPCodes.MSP_RC_DEADBAND, name: 'MSP_RC_DEADBAND', ...parseRcDeadbandConfig(data) };
+    case MSPCodes.MSP_GPS_CONFIG:
+      return { code: MSPCodes.MSP_GPS_CONFIG, name: 'MSP_GPS_CONFIG', ...parseGpsConfig(data) };
+    case MSPCodes.MSP_GPS_RESCUE:
+      return { code: MSPCodes.MSP_GPS_RESCUE, name: 'MSP_GPS_RESCUE', ...parseGpsRescue(data) };
+    case MSPCodes.MSP_GPS_SV_INFO:
+      return { code: MSPCodes.MSP_GPS_SV_INFO, name: 'MSP_GPS_SV_INFO', ...parseGpsSvInfo(data) };
+    case MSPCodes.MSP_VTX_CONFIG:
+      return { code: MSPCodes.MSP_VTX_CONFIG, name: 'MSP_VTX_CONFIG', ...parseVtxConfig(data) };
+    case MSPCodes.MSP_VTXTABLE_BAND:
+      return { code: MSPCodes.MSP_VTXTABLE_BAND, name: 'MSP_VTXTABLE_BAND', ...parseVtxTableBand(data) };
+    case MSPCodes.MSP_VTXTABLE_POWERLEVEL:
+      return { code: MSPCodes.MSP_VTXTABLE_POWERLEVEL, name: 'MSP_VTXTABLE_POWERLEVEL', ...parseVtxTablePowerLevel(data) };
+    case MSPCodes.MSP_LED_COLORS:
+      return { code: MSPCodes.MSP_LED_COLORS, name: 'MSP_LED_COLORS', ledColors: parseLedColors(data) };
+    case MSPCodes.MSP_LED_STRIP_MODECOLOR:
+      return {
+        code: MSPCodes.MSP_LED_STRIP_MODECOLOR,
+        name: 'MSP_LED_STRIP_MODECOLOR',
+        ledStripModeColors: parseLedStripModeColor(data),
+      };
+    case MSPCodes.MSP_RXFAIL_CONFIG:
+      return { code: MSPCodes.MSP_RXFAIL_CONFIG, name: 'MSP_RXFAIL_CONFIG', rxFailConfig: parseRxFailConfig(data) };
+    case MSPCodes.MSP_RX_MAP:
+      return { code: MSPCodes.MSP_RX_MAP, name: 'MSP_RX_MAP', ...parseRxMap(data) };
+    case MSPCodes.MSP_SENSOR_CONFIG:
+      return { code: MSPCodes.MSP_SENSOR_CONFIG, name: 'MSP_SENSOR_CONFIG', ...parseSensorConfig(data) };
+    case MSPCodes.MSP_SENSOR_ALIGNMENT:
+      return { code: MSPCodes.MSP_SENSOR_ALIGNMENT, name: 'MSP_SENSOR_ALIGNMENT', ...parseSensorAlignment(data) };
+    case MSPCodes.MSP_PID:
+      return { code: MSPCodes.MSP_PID, name: 'MSP_PID', pids: parsePid(data) };
+    case MSPCodes.MSP_BLACKBOX_CONFIG:
+      return { code: MSPCodes.MSP_BLACKBOX_CONFIG, name: 'MSP_BLACKBOX_CONFIG', ...parseBlackboxConfig(data) };
   }
   throw new Error(`Unknown MSP code: ${code}`);
 };
