@@ -91,6 +91,14 @@ export class MultiwiiSerialProtocol extends EventEmitter {
   }
 
   /**
+   * List
+   */
+
+  public static async list() {
+    return SerialPort.list();
+  }
+
+  /**
    * Event handlers
    */
 

@@ -1,8 +1,13 @@
 import { MultiwiiSerialProtocol, MSPMsg } from './index';
 
 const main = async () => {
+  const ports = await MultiwiiSerialProtocol.list();
+  if (!ports.length) return console.log('No ports found');
+  const devices = ports.filter((itm) => itm.manufacturer === 'Betaflight');
+  if (!devices.length) return console.log('No Betaflight devices found');
+  const device = devices[0];
   const msp = new MultiwiiSerialProtocol({
-    path: '/dev/tty.usbmodem0x80000001',
+    path: device.path,
     baudRate: 115200,
     // dataBits: 8,
     // stopBits: 1,
@@ -11,6 +16,19 @@ const main = async () => {
 
   msp.on('connect', async () => {
     console.log('connected');
+    await getInfo();
+    await msp.disconnect();
+  });
+
+  msp.on('disconnect', () => {
+    console.log('disconnected');
+  });
+
+  msp.on('message', (msg: MSPMsg) => {
+    // console.log(msg);
+  });
+
+  const getInfo = async () => {
     // console.log('getStatus', await msp.getStatus());
     // console.log('getStatusEx', await msp.getStatusEx());
     // console.log('getRawIMU', await msp.getRawIMU());
@@ -24,18 +42,9 @@ const main = async () => {
     // console.log('getFcVersion', await msp.getFcVersion())2;
     // console.log('getBuildInfo', await msp.getBuildInfo());
     // console.log('getBoardInfo', await msp.getBoardInfo());
-    // console.log('getName', await msp.getName());
-
-    console.log('beeper config', await msp.getBeeperConfig());
-  });
-
-  msp.on('disconnect', () => {
-    console.log('disconnected');
-  });
-
-  msp.on('message', (msg: MSPMsg) => {
-    // console.log(msg);
-  });
+    console.log('getName', await msp.getName());
+    // console.log('beeper config', await msp.getBeeperConfig());
+  };
 
   await msp.connect();
 };
