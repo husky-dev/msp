@@ -4,24 +4,6 @@ import { SerialPort } from 'serialport';
 import { msp2GetTextCodes, MSPCodes } from './codes';
 import {
   composeSetName,
-  MSPAnalog,
-  MSPApiVersion,
-  MSPBatteryConfig,
-  MSPBatteryState,
-  MSPBeeperConfig,
-  MSPBoardInfo,
-  MSPCompGps,
-  MSPCurrentMeter,
-  MSPCurrentMeterConfig,
-  MSPMotorConfig,
-  MSPMotorTelemetry,
-  MSPRawGPS,
-  MSPRawIMU,
-  MSPServoConfiguration,
-  MSPStatus,
-  MSPStatusEx,
-  MSPVoltageMeter,
-  MSPVoltageMeterConfig,
   parseAltitude,
   parseAnalog,
   parseApiVersion,
@@ -29,6 +11,7 @@ import {
   parseBatteryConfig,
   parseBatteryState,
   parseBeeperConfig,
+  parseBlackboxConfig,
   parseBoardInfo,
   parseBuildInfo,
   parseCompGPS,
@@ -37,14 +20,29 @@ import {
   parseFcVariant,
   parseFcVersion,
   parseGetText,
+  parseGpsConfig,
+  parseGpsRescue,
+  parseGpsSvInfo,
+  parseLedColors,
+  parseLedStripModeColor,
+  parseModeRanges,
+  parseModeRangesExtra,
   parseMotor,
+  parseMotor3DConfig,
   parseMotorConfig,
   parseMotorTelemetry,
   parseMsg,
   parseName,
+  parseOsdCanvas,
+  parsePid,
   parseRawGPS,
   parseRawIMU,
   parseRC,
+  parseRcDeadbandConfig,
+  parseRxFailConfig,
+  parseRxMap,
+  parseSensorAlignment,
+  parseSensorConfig,
   parseServo,
   parseServoConfigurations,
   parseSonar,
@@ -53,42 +51,9 @@ import {
   parseUID,
   parseVoltageMeterConfig,
   parseVoltageMeters,
-  parseModeRanges,
-  MSPModeRange,
-  parseModeRangesExtra,
-  MSPModeRangeExtra,
-  MSPMotor3DConfig,
-  parseMotor3DConfig,
-  MSPRcDeadbandConfig,
-  parseRcDeadbandConfig,
-  MSPGpsConfig,
-  parseGpsConfig,
-  MSPGpsRescueConfig,
-  parseGpsRescue,
-  MSPGpsSvInfo,
-  parseGpsSvInfo,
-  MSPVtxConfig,
   parseVtxConfig,
-  MSPVtxTableBand,
   parseVtxTableBand,
-  MSPVtxTablePowerLevel,
   parseVtxTablePowerLevel,
-  MSPLedColor,
-  parseLedColors,
-  MSPLedStripModeColor,
-  parseLedStripModeColor,
-  MSPRxFailConfig,
-  parseRxFailConfig,
-  parseRxMap,
-  MSPSensorConfig,
-  parseSensorConfig,
-  MSPSensorAlignment,
-  parseSensorAlignment,
-  MSPPid,
-  parsePid,
-  MSPBlackboxConfig,
-  parseBlackboxConfig,
-  parseOsdCanvas,
 } from './msg';
 import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16 } from './utils';
 
@@ -230,7 +195,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   profile: 0
    * }
    */
-  public async getStatus(): Promise<MSPStatus> {
+  public async getStatus() {
     return parseStatus(await this.sendMessage(MSPCodes.MSP_STATUS));
   }
 
@@ -252,7 +217,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *    configStateFlag: 0
    *  }
    */
-  public async getStatusEx(): Promise<MSPStatusEx> {
+  public async getStatusEx() {
     return parseStatusEx(await this.sendMessage(MSPCodes.MSP_STATUS_EX));
   }
 
@@ -270,7 +235,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   magnetometer: [ 0, 0, 0 ]
    * }
    */
-  public async getRawIMU(): Promise<MSPRawIMU> {
+  public async getRawIMU() {
     return parseRawIMU(await this.sendMessage(MSPCodes.MSP_RAW_IMU));
   }
 
@@ -284,7 +249,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example
    * [ 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
    */
-  public async getServo(): Promise<number[]> {
+  public async getServo() {
     return parseServo(await this.sendMessage(MSPCodes.MSP_SERVO));
   }
 
@@ -313,7 +278,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   }
    * ]
    */
-  public async getServoConfigurations(): Promise<MSPServoConfiguration[]> {
+  public async getServoConfigurations() {
     return parseServoConfigurations(await this.sendMessage(MSPCodes.MSP_SERVO_CONFIGURATIONS));
   }
 
@@ -328,7 +293,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_MOTOR
    * @example [ 1000, 1000, 1000, 1000, 0, 0, 0, 0 ]
    */
-  public async getMotor(): Promise<number[]> {
+  public async getMotor() {
     return parseMotor(await this.sendMessage(MSPCodes.MSP_MOTOR));
   }
 
@@ -359,7 +324,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   useEscSensor: true
    * }
    */
-  public async getMotorConfig(): Promise<MSPMotorConfig> {
+  public async getMotorConfig() {
     return parseMotorConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_CONFIG));
   }
 
@@ -404,7 +369,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   }
    * ]
    */
-  public async getMotorTelemetry(): Promise<MSPMotorTelemetry[]> {
+  public async getMotorTelemetry() {
     return parseMotorTelemetry(await this.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY));
   }
 
@@ -422,7 +387,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   neutral: 1460
    * }
    */
-  public async getMotor3DConfig(): Promise<MSPMotor3DConfig> {
+  public async getMotor3DConfig() {
     return parseMotor3DConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_3D_CONFIG));
   }
 
@@ -438,7 +403,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_RC
    * @example  [ 1500, 1500, 1500,  885, 1675, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
    */
-  public async getRc(): Promise<number[]> {
+  public async getRc() {
     return parseRC(await this.sendMessage(MSPCodes.MSP_RC));
   }
 
@@ -458,7 +423,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   deadband3dThrottle: 50
    * }
    */
-  public async getRcDeadbandConfig(): Promise<MSPRcDeadbandConfig> {
+  public async getRcDeadbandConfig() {
     return parseRcDeadbandConfig(await this.sendMessage(MSPCodes.MSP_RC_DEADBAND));
   }
 
@@ -482,7 +447,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   groundCourse: 0
    * }
    */
-  public async getRawGPS(): Promise<MSPRawGPS> {
+  public async getRawGPS() {
     return parseRawGPS(await this.sendMessage(MSPCodes.MSP_RAW_GPS));
   }
 
@@ -491,7 +456,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_COMP_GPS
    * @example { distanceToHome: 0, directionToHome: 0, update: 0 }
    */
-  public async getCompGPS(): Promise<MSPCompGps> {
+  public async getCompGPS() {
     return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
   }
 
@@ -508,13 +473,13 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   ubloxUseGalileo: 0
    * }
    */
-  public async getGpsConfig(): Promise<MSPGpsConfig> {
+  public async getGpsConfig() {
     return parseGpsConfig(await this.sendMessage(MSPCodes.MSP_GPS_CONFIG));
   }
 
   // TODO: MSP_SET_GPS_CONFIG
 
-  public async getGpsRescue(): Promise<MSPGpsRescueConfig> {
+  public async getGpsRescue() {
     return parseGpsRescue(await this.sendMessage(MSPCodes.MSP_GPS_RESCUE));
   }
 
@@ -532,7 +497,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   cno: []
    * }
    */
-  public async getGpsSvInfo(): Promise<MSPGpsSvInfo> {
+  public async getGpsSvInfo() {
     return parseGpsSvInfo(await this.sendMessage(MSPCodes.MSP_GPS_SV_INFO));
   }
 
@@ -552,7 +517,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_ATTITUDE
    * @example [ 4.1, -0.1, 14.2 ]
    */
-  public async getAttitude(): Promise<number[]> {
+  public async getAttitude() {
     return parseAttitude(await this.sendMessage(MSPCodes.MSP_ATTITUDE));
   }
 
@@ -561,7 +526,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_ALTITUDE
    * @example -0.14
    */
-  public async getAltitude(): Promise<number> {
+  public async getAltitude() {
     return parseAltitude(await this.sendMessage(MSPCodes.MSP_ALTITUDE));
   }
 
@@ -570,7 +535,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_SONAR
    * @example 0
    */
-  public async getSonar(): Promise<number> {
+  public async getSonar() {
     return parseSonar(await this.sendMessage(MSPCodes.MSP_SONAR));
   }
 
@@ -585,7 +550,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   amperage: 0
    * }
    */
-  public async getAnalog(): Promise<MSPAnalog> {
+  public async getAnalog() {
     return parseAnalog(await this.sendMessage(MSPCodes.MSP_ANALOG));
   }
 
@@ -606,7 +571,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { id: 63, voltage: 0 }
    * ]
    */
-  public async getVoltageMeters(): Promise<MSPVoltageMeter[]> {
+  public async getVoltageMeters() {
     return parseVoltageMeters(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METERS));
   }
 
@@ -618,7 +583,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { id: 10, sensorType: 0, vbatscale: 110, vbatresdivval: 10, vbatresdivmultiplier: 1 }
    * ];
    */
-  public async getVoltageMeterConfig(): Promise<MSPVoltageMeterConfig[]> {
+  public async getVoltageMeterConfig() {
     return parseVoltageMeterConfig(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG));
   }
 
@@ -643,7 +608,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { id: 63, mAhDrawn: 0, amperage: 0 }
    * ]
    */
-  public async getCurrentMeters(): Promise<MSPCurrentMeter[]> {
+  public async getCurrentMeters() {
     return parseCurrentMeters(await this.sendMessage(MSPCodes.MSP_CURRENT_METERS));
   }
 
@@ -656,7 +621,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { id: 80, sensorType: 0, scale: 0, offset: 0 }
    * ]
    */
-  public async getCurrentMeterConfig(): Promise<MSPCurrentMeterConfig[]> {
+  public async getCurrentMeterConfig() {
     return parseCurrentMeterConfig(await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG));
   }
 
@@ -680,7 +645,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   batteryState: 3
    * }
    */
-  public async getBatteryState(): Promise<MSPBatteryState> {
+  public async getBatteryState() {
     return parseBatteryState(await this.sendMessage(MSPCodes.MSP_BATTERY_STATE));
   }
 
@@ -697,7 +662,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   currentMeterSource: 1
    * }
    */
-  public async getBatteryConfig(): Promise<MSPBatteryConfig> {
+  public async getBatteryConfig() {
     return parseBatteryConfig(await this.sendMessage(MSPCodes.MSP_BATTERY_CONFIG));
   }
 
@@ -712,7 +677,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   apiVersion: '1.45.0'
    * }
    */
-  public async getApiVersion(): Promise<MSPApiVersion> {
+  public async getApiVersion() {
     return parseApiVersion(await this.sendMessage(MSPCodes.MSP_API_VERSION));
   }
 
@@ -721,7 +686,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_FC_VARIANT
    * @example 'BTFL'
    */
-  public async getFcVariant(): Promise<string> {
+  public async getFcVariant() {
     return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT));
   }
 
@@ -730,7 +695,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_FC_VERSION
    * @example '4.4.3'
    */
-  public async getFcVersion(): Promise<string> {
+  public async getFcVersion() {
     return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION));
   }
 
@@ -739,7 +704,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_BUILD_INFO
    * @example 'Nov 18 2023 06:49:34'
    */
-  public async getBuildInfo(): Promise<string> {
+  public async getBuildInfo() {
     return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO));
   }
 
@@ -764,7 +729,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   mcuTypeId: 1
    * }
    */
-  public async getBoardInfo(): Promise<MSPBoardInfo> {
+  public async getBoardInfo() {
     return parseBoardInfo(await this.sendMessage(MSPCodes.MSP_BOARD_INFO));
   }
 
@@ -793,19 +758,19 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   vtxTableClear: false
    * }
    */
-  public async getVtxConfig(): Promise<MSPVtxConfig> {
+  public async getVtxConfig() {
     return parseVtxConfig(await this.sendMessage(MSPCodes.MSP_VTX_CONFIG));
   }
 
   // TODO: MSP_SET_VTX_CONFIG
 
-  public async getVtxTableBand(): Promise<MSPVtxTableBand> {
+  public async getVtxTableBand() {
     return parseVtxTableBand(await this.sendMessage(MSPCodes.MSP_VTXTABLE_BAND));
   }
 
   // TODO: MSP_SET_VTXTABLE_BAND
 
-  public async getVtxTablePowerLevel(): Promise<MSPVtxTablePowerLevel> {
+  public async getVtxTablePowerLevel() {
     return parseVtxTablePowerLevel(await this.sendMessage(MSPCodes.MSP_VTXTABLE_POWERLEVEL));
   }
 
@@ -843,7 +808,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { h: 0, s: 0, v: 0 }
    * ]
    */
-  public async getLedColors(): Promise<MSPLedColor[]> {
+  public async getLedColors() {
     return parseLedColors(await this.sendMessage(MSPCodes.MSP_LED_COLORS));
   }
 
@@ -868,7 +833,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { mode: 1, direction: 5, color: 3 },
    * ]
    */
-  public async getLedStripModeColor(): Promise<MSPLedStripModeColor[]> {
+  public async getLedStripModeColor() {
     return parseLedStripModeColor(await this.sendMessage(MSPCodes.MSP_LED_STRIP_MODECOLOR));
   }
 
@@ -907,7 +872,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { mode: 1, value: 1500 }
    * ]
    */
-  public async getRxFailConfig(): Promise<MSPRxFailConfig[]> {
+  public async getRxFailConfig() {
     return parseRxFailConfig(await this.sendMessage(MSPCodes.MSP_RXFAIL_CONFIG));
   }
 
@@ -921,7 +886,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   4, 5, 6, 7
    * ]
    */
-  public async getRxMap(): Promise<number[]> {
+  public async getRxMap() {
     return parseRxMap(await this.sendMessage(MSPCodes.MSP_RX_MAP));
   }
 
@@ -941,7 +906,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   magHardware: 0
    * }
    */
-  public async getSensorConfig(): Promise<MSPSensorConfig> {
+  public async getSensorConfig() {
     return parseSensorConfig(await this.sendMessage(MSPCodes.MSP_SENSOR_CONFIG));
   }
 
@@ -961,7 +926,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   gyro2Align: 1
    * }
    */
-  public async getSensorAlignment(): Promise<MSPSensorAlignment> {
+  public async getSensorAlignment() {
     return parseSensorAlignment(await this.sendMessage(MSPCodes.MSP_SENSOR_ALIGNMENT));
   }
 
@@ -984,7 +949,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { p: 40, i: 0, d: 0 }
    * ]
    */
-  public async getPid(): Promise<MSPPid[]> {
+  public async getPid() {
     return parsePid(await this.sendMessage(MSPCodes.MSP_PID));
   }
 
@@ -1095,7 +1060,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { id: 0, auxChannelIndex: 0, range: { start: 900, end: 900 } }
    * ]
    */
-  public async getModeRanges(): Promise<MSPModeRange[]> {
+  public async getModeRanges() {
     return parseModeRanges(await this.sendMessage(MSPCodes.MSP_MODE_RANGES));
   }
 
@@ -1127,7 +1092,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   { id: 0, modeLogic: 0, linkedTo: 0 }
    * ]
    */
-  public async getModeRangesExtra(): Promise<MSPModeRangeExtra[]> {
+  public async getModeRangesExtra() {
     return parseModeRangesExtra(await this.sendMessage(MSPCodes.MSP_MODE_RANGES_EXTRA));
   }
 
@@ -1216,7 +1181,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *   dshotBeaconConditionsMask: 2
    * }
    */
-  public async getBeeperConfig(): Promise<MSPBeeperConfig> {
+  public async getBeeperConfig() {
     return parseBeeperConfig(await this.sendMessage(MSPCodes.MSP_BEEPER_CONFIG));
   }
 
@@ -1229,7 +1194,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_NAME
    * @example 'SDUA_123456'
    */
-  public async getName(): Promise<string> {
+  public async getName() {
     return parseName(await this.sendMessage(MSPCodes.MSP_NAME));
   }
 
@@ -1246,7 +1211,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @see MSP_UID
    * @example '3009386739576c95837562'
    */
-  public async getUid(): Promise<string> {
+  public async getUid() {
     return parseUID(await this.sendMessage(MSPCodes.MSP_UID));
   }
 }
