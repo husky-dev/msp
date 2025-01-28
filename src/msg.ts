@@ -1,10 +1,11 @@
+/**
+ * Original doucmentation:
+ * http://www.multiwii.com/wiki/index.php?title=Multiwii_Serial_Protocol
+ * Betaflight extended documentation:
+ * https://github.com/betaflight/betaflight/blob/master/src/main/msp/msp_protocol.h
+ */
 import { MSPCodes } from './codes';
 import { BuffDataView, buffToDataView, push8 } from './utils';
-
-// Original doucmentation:
-// http://www.multiwii.com/wiki/index.php?title=Multiwii_Serial_Protocol
-// Betaflight extended documentation:
-// https://github.com/betaflight/betaflight/blob/master/src/main/msp/msp_protocol.h
 
 export interface MSPStatus {
   /** Cycle time in milliseconds. Example: `20` */
@@ -218,7 +219,7 @@ export const parseRawGPS = (data: BuffDataView): MSPRawGPS => ({
   groundCourse: data.readU16(),
 });
 
-export interface MSPCompGps {
+export interface MSPCompGPS {
   /** Distance to home point in meters. Example: `100` */
   distanceToHome: number;
   /** Direction to home point in degrees from North. Example: `270` (West) */
@@ -227,7 +228,7 @@ export interface MSPCompGps {
   update: number;
 }
 
-export const parseCompGPS = (data: BuffDataView): MSPCompGps => ({
+export const parseCompGPS = (data: BuffDataView): MSPCompGPS => ({
   distanceToHome: data.readU16(),
   directionToHome: data.readU16(),
   update: data.readU8(),
@@ -1275,202 +1276,292 @@ export const parseOsdCanvas = (data: BuffDataView): MSPOsdCanvas => {
 // TODO: MSP_OSD_CHAR_READ
 // TODO: MSP_OSD_CHAR_WRITE
 
-export const parseMsg = (code: number, payload: Buffer) => {
-  const data = buffToDataView(payload);
+interface MSPMsgBase<C extends number> {
+  code: C;
+}
 
+interface MSPMsgWithPayload<C extends number, P> extends MSPMsgBase<C> {
+  payload: P;
+}
+
+export type MSPMsg =
+  | MSPMsgWithPayload<MSPCodes.MSP_STATUS, MSPStatus>
+  | MSPMsgWithPayload<MSPCodes.MSP_STATUS_EX, MSPStatusEx>
+  | MSPMsgWithPayload<MSPCodes.MSP_RAW_IMU, MSPRawIMU>
+  | MSPMsgWithPayload<MSPCodes.MSP_SERVO, number[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_SERVO_CONFIGURATIONS, MSPServoConfiguration[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_MOTOR, number[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_MOTOR_TELEMETRY, MSPMotorTelemetry[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_RC, number[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_RAW_GPS, MSPRawGPS>
+  | MSPMsgWithPayload<MSPCodes.MSP_COMP_GPS, MSPCompGPS>
+  | MSPMsgWithPayload<MSPCodes.MSP_ATTITUDE, number[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_ALTITUDE, number>
+  | MSPMsgWithPayload<MSPCodes.MSP_SONAR, number>
+  | MSPMsgWithPayload<MSPCodes.MSP_ANALOG, MSPAnalog>
+  | MSPMsgWithPayload<MSPCodes.MSP_VOLTAGE_METERS, MSPVoltageMeter[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_CURRENT_METERS, MSPCurrentMeter[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_BATTERY_STATE, MSPBatteryState>
+  | MSPMsgWithPayload<MSPCodes.MSP_VOLTAGE_METER_CONFIG, MSPVoltageMeterConfig[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_CURRENT_METER_CONFIG, MSPCurrentMeterConfig[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_BATTERY_CONFIG, MSPBatteryConfig>
+  | MSPMsgBase<MSPCodes.MSP_SET_BATTERY_CONFIG>
+  | MSPMsgWithPayload<MSPCodes.MSP_MOTOR_CONFIG, MSPMotorConfig>
+  | MSPMsgBase<MSPCodes.MSP_DISPLAYPORT>
+  | MSPMsgBase<MSPCodes.MSP_SET_RAW_RC>
+  | MSPMsgBase<MSPCodes.MSP_SET_PID>
+  | MSPMsgBase<MSPCodes.MSP_SET_RC_TUNING>
+  | MSPMsgBase<MSPCodes.MSP_ACC_CALIBRATION>
+  | MSPMsgBase<MSPCodes.MSP_MAG_CALIBRATION>
+  | MSPMsgBase<MSPCodes.MSP_SET_MOTOR_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_GPS_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_GPS_RESCUE>
+  | MSPMsgBase<MSPCodes.MSP_SET_RSSI_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_FEATURE_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_BEEPER_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_RESET_CONF>
+  | MSPMsgBase<MSPCodes.MSP_SELECT_SETTING>
+  | MSPMsgBase<MSPCodes.MSP_SET_SERVO_CONFIGURATION>
+  | MSPMsgBase<MSPCodes.MSP_EEPROM_WRITE>
+  | MSPMsgBase<MSPCodes.MSP_SET_CURRENT_METER_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_MOTOR>
+  | MSPMsgBase<MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL>
+  | MSPMsgBase<MSPCodes.MSP_SET_MODE_RANGE>
+  | MSPMsgBase<MSPCodes.MSP_SET_ADJUSTMENT_RANGE>
+  | MSPMsgBase<MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_PID_CONTROLLER>
+  | MSPMsgBase<MSPCodes.MSP_SET_PID_CONTROLLER>
+  | MSPMsgBase<MSPCodes.MSP_SET_LOOP_TIME>
+  | MSPMsgBase<MSPCodes.MSP_SET_ARMING_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_RESET_CURR_PID>
+  | MSPMsgBase<MSPCodes.MSP_SET_MOTOR_3D_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_MIXER_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_RC_DEADBAND>
+  | MSPMsgBase<MSPCodes.MSP_SET_SENSOR_ALIGNMENT>
+  | MSPMsgBase<MSPCodes.MSP_SET_RX_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_RXFAIL_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_FAILSAFE_CONFIG>
+  | MSPMsgBase<MSPCodes.MSP_SET_NAME>
+  | MSPMsgWithPayload<MSPCodes.MSP_API_VERSION, MSPApiVersion>
+  | MSPMsgWithPayload<MSPCodes.MSP_FC_VARIANT, string>
+  | MSPMsgWithPayload<MSPCodes.MSP_FC_VERSION, string>
+  | MSPMsgWithPayload<MSPCodes.MSP_BUILD_INFO, string>
+  | MSPMsgWithPayload<MSPCodes.MSP_BOARD_INFO, MSPBoardInfo>
+  | MSPMsgWithPayload<MSPCodes.MSP_NAME, string>
+  | MSPMsgWithPayload<MSPCodes.MSP_UID, string>
+  | MSPMsgWithPayload<MSPCodes.MSP2_GET_TEXT, { type: number; value: string }>
+  | MSPMsgBase<MSPCodes.MSP2_SET_TEXT>
+  | MSPMsgWithPayload<MSPCodes.MSP_BEEPER_CONFIG, MSPBeeperConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_MODE_RANGES, MSPModeRange[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_MODE_RANGES_EXTRA, MSPModeRangeExtra[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_MOTOR_3D_CONFIG, MSPMotor3DConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_RC_DEADBAND, MSPRcDeadbandConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_GPS_CONFIG, MSPGpsConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_GPS_RESCUE, MSPGpsRescueConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_GPS_SV_INFO, MSPGpsSvInfo>
+  | MSPMsgWithPayload<MSPCodes.MSP_VTX_CONFIG, MSPVtxConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_VTXTABLE_BAND, MSPVtxTableBand>
+  | MSPMsgWithPayload<MSPCodes.MSP_VTXTABLE_POWERLEVEL, MSPVtxTablePowerLevel>
+  | MSPMsgWithPayload<MSPCodes.MSP_LED_COLORS, MSPLedColor[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_LED_STRIP_MODECOLOR, MSPLedStripModeColor[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_RXFAIL_CONFIG, MSPRxFailConfig[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_RX_MAP, number[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_SENSOR_CONFIG, MSPSensorConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_SENSOR_ALIGNMENT, MSPSensorAlignment>
+  | MSPMsgWithPayload<MSPCodes.MSP_PID, MSPPid[]>
+  | MSPMsgWithPayload<MSPCodes.MSP_BLACKBOX_CONFIG, MSPBlackboxConfig>
+  | MSPMsgWithPayload<MSPCodes.MSP_OSD_CANVAS, MSPOsdCanvas>;
+
+export const parseMsg = (code: number, payload: Buffer): MSPMsg | undefined => {
+  const data = buffToDataView(payload);
   switch (code) {
     case MSPCodes.MSP_STATUS:
-      return { code: MSPCodes.MSP_STATUS, name: 'MSP_STATUS', ...parseStatus(data) };
+      return { code: MSPCodes.MSP_STATUS, payload: parseStatus(data) };
     case MSPCodes.MSP_STATUS_EX:
-      return { code: MSPCodes.MSP_STATUS_EX, name: 'MSP_STATUS_EX', ...parseStatusEx(data) };
+      return { code: MSPCodes.MSP_STATUS_EX, payload: parseStatusEx(data) };
     case MSPCodes.MSP_RAW_IMU:
-      return { code: MSPCodes.MSP_RAW_IMU, name: 'MSP_RAW_IMU', ...parseRawIMU(data) };
+      return { code: MSPCodes.MSP_RAW_IMU, payload: parseRawIMU(data) };
     case MSPCodes.MSP_SERVO:
-      return { code: MSPCodes.MSP_SERVO, name: 'MSP_SERVO', servo: parseServo(data) };
+      return { code: MSPCodes.MSP_SERVO, payload: parseServo(data) };
     case MSPCodes.MSP_SERVO_CONFIGURATIONS:
       return {
         code: MSPCodes.MSP_SERVO_CONFIGURATIONS,
-        name: 'MSP_SERVO_CONFIGURATIONS',
-        servoConfigurations: parseServoConfigurations(data),
+
+        payload: parseServoConfigurations(data),
       };
     case MSPCodes.MSP_MOTOR:
-      return { code: MSPCodes.MSP_MOTOR, name: 'MSP_MOTOR', motor: parseMotor(data) };
+      return { code: MSPCodes.MSP_MOTOR, payload: parseMotor(data) };
     case MSPCodes.MSP_MOTOR_TELEMETRY:
-      return { code: MSPCodes.MSP_MOTOR_TELEMETRY, name: 'MSP_MOTOR_TELEMETRY', motorTelemetry: parseMotorTelemetry(data) };
+      return { code: MSPCodes.MSP_MOTOR_TELEMETRY, payload: parseMotorTelemetry(data) };
     case MSPCodes.MSP_RC:
-      return { code: MSPCodes.MSP_RC, name: 'MSP_RC', channels: parseRC(data) };
+      return { code: MSPCodes.MSP_RC, payload: parseRC(data) };
     case MSPCodes.MSP_RAW_GPS:
-      return { code: MSPCodes.MSP_RAW_GPS, name: 'MSP_RAW_GPS', ...parseRawGPS(data) };
+      return { code: MSPCodes.MSP_RAW_GPS, payload: parseRawGPS(data) };
     case MSPCodes.MSP_COMP_GPS:
-      return { code: MSPCodes.MSP_COMP_GPS, name: 'MSP_COMP_GPS', ...parseCompGPS(data) };
+      return { code: MSPCodes.MSP_COMP_GPS, payload: parseCompGPS(data) };
     case MSPCodes.MSP_ATTITUDE:
-      return { code: MSPCodes.MSP_ATTITUDE, name: 'MSP_ATTITUDE', kinematics: parseAttitude(data) };
+      return { code: MSPCodes.MSP_ATTITUDE, payload: parseAttitude(data) };
     case MSPCodes.MSP_ALTITUDE:
-      return { code: MSPCodes.MSP_ALTITUDE, name: 'MSP_ALTITUDE', altitude: parseAltitude(data) };
+      return { code: MSPCodes.MSP_ALTITUDE, payload: parseAltitude(data) };
     case MSPCodes.MSP_SONAR:
-      return { code: MSPCodes.MSP_SONAR, name: 'MSP_SONAR', sonar: parseSonar(data) };
+      return { code: MSPCodes.MSP_SONAR, payload: parseSonar(data) };
     case MSPCodes.MSP_ANALOG:
-      return { code: MSPCodes.MSP_ANALOG, name: 'MSP_ANALOG', ...parseAnalog(data) };
+      return { code: MSPCodes.MSP_ANALOG, payload: parseAnalog(data) };
     case MSPCodes.MSP_VOLTAGE_METERS:
-      return { code: MSPCodes.MSP_VOLTAGE_METERS, name: 'MSP_VOLTAGE_METERS', voltageMeters: parseVoltageMeters(data) };
+      return { code: MSPCodes.MSP_VOLTAGE_METERS, payload: parseVoltageMeters(data) };
     case MSPCodes.MSP_CURRENT_METERS:
-      return { code: MSPCodes.MSP_CURRENT_METERS, name: 'MSP_CURRENT_METERS', currentMeters: parseCurrentMeters(data) };
+      return { code: MSPCodes.MSP_CURRENT_METERS, payload: parseCurrentMeters(data) };
     case MSPCodes.MSP_BATTERY_STATE:
-      return { code: MSPCodes.MSP_BATTERY_STATE, name: 'MSP_BATTERY_STATE', ...parseBatteryState(data) };
+      return { code: MSPCodes.MSP_BATTERY_STATE, payload: parseBatteryState(data) };
     case MSPCodes.MSP_VOLTAGE_METER_CONFIG:
       return {
         code: MSPCodes.MSP_VOLTAGE_METER_CONFIG,
-        name: 'MSP_VOLTAGE_METER_CONFIG',
-        voltageMeterConfigs: parseVoltageMeterConfig(data),
+
+        payload: parseVoltageMeterConfig(data),
       };
     case MSPCodes.MSP_CURRENT_METER_CONFIG:
       return {
         code: MSPCodes.MSP_CURRENT_METER_CONFIG,
-        name: 'MSP_CURRENT_METER_CONFIG',
-        currentMeterConfigs: parseCurrentMeterConfig(data),
+
+        payload: parseCurrentMeterConfig(data),
       };
     case MSPCodes.MSP_BATTERY_CONFIG:
-      return { code: MSPCodes.MSP_BATTERY_CONFIG, name: 'MSP_BATTERY_CONFIG', ...parseBatteryConfig(data) };
+      return { code: MSPCodes.MSP_BATTERY_CONFIG, payload: parseBatteryConfig(data) };
     case MSPCodes.MSP_SET_BATTERY_CONFIG:
-      return { code: MSPCodes.MSP_SET_BATTERY_CONFIG, name: 'MSP_SET_BATTERY_CONFIG' };
+      return { code: MSPCodes.MSP_SET_BATTERY_CONFIG };
     case MSPCodes.MSP_MOTOR_CONFIG:
-      return { code: MSPCodes.MSP_MOTOR_CONFIG, name: 'MSP_MOTOR_CONFIG', ...parseMotorConfig(data) };
+      return { code: MSPCodes.MSP_MOTOR_CONFIG, payload: parseMotorConfig(data) };
     case MSPCodes.MSP_DISPLAYPORT:
-      return { code: MSPCodes.MSP_DISPLAYPORT, name: 'MSP_DISPLAYPORT' };
+      return { code: MSPCodes.MSP_DISPLAYPORT };
     case MSPCodes.MSP_SET_RAW_RC:
-      return { code: MSPCodes.MSP_SET_RAW_RC, name: 'MSP_SET_RAW_RC' };
+      return { code: MSPCodes.MSP_SET_RAW_RC };
     case MSPCodes.MSP_SET_PID:
-      return { code: MSPCodes.MSP_SET_PID, name: 'MSP_SET_PID' };
+      return { code: MSPCodes.MSP_SET_PID };
     case MSPCodes.MSP_SET_RC_TUNING:
-      return { code: MSPCodes.MSP_SET_RC_TUNING, name: 'MSP_SET_RC_TUNING' };
+      return { code: MSPCodes.MSP_SET_RC_TUNING };
     case MSPCodes.MSP_ACC_CALIBRATION:
-      return { code: MSPCodes.MSP_ACC_CALIBRATION, name: 'MSP_ACC_CALIBRATION' };
+      return { code: MSPCodes.MSP_ACC_CALIBRATION };
     case MSPCodes.MSP_MAG_CALIBRATION:
-      return { code: MSPCodes.MSP_MAG_CALIBRATION, name: 'MSP_MAG_CALIBRATION' };
+      return { code: MSPCodes.MSP_MAG_CALIBRATION };
     case MSPCodes.MSP_SET_MOTOR_CONFIG:
-      return { code: MSPCodes.MSP_SET_MOTOR_CONFIG, name: 'MSP_SET_MOTOR_CONFIG' };
+      return { code: MSPCodes.MSP_SET_MOTOR_CONFIG };
     case MSPCodes.MSP_SET_GPS_CONFIG:
-      return { code: MSPCodes.MSP_SET_GPS_CONFIG, name: 'MSP_SET_GPS_CONFIG' };
+      return { code: MSPCodes.MSP_SET_GPS_CONFIG };
     case MSPCodes.MSP_SET_GPS_RESCUE:
-      return { code: MSPCodes.MSP_SET_GPS_RESCUE, name: 'MSP_SET_GPS_RESCUE' };
+      return { code: MSPCodes.MSP_SET_GPS_RESCUE };
     case MSPCodes.MSP_SET_RSSI_CONFIG:
-      return { code: MSPCodes.MSP_SET_RSSI_CONFIG, name: 'MSP_SET_RSSI_CONFIG' };
+      return { code: MSPCodes.MSP_SET_RSSI_CONFIG };
     case MSPCodes.MSP_SET_FEATURE_CONFIG:
-      return { code: MSPCodes.MSP_SET_FEATURE_CONFIG, name: 'MSP_SET_FEATURE_CONFIG' };
+      return { code: MSPCodes.MSP_SET_FEATURE_CONFIG };
     case MSPCodes.MSP_SET_BEEPER_CONFIG:
-      return { code: MSPCodes.MSP_SET_BEEPER_CONFIG, name: 'MSP_SET_BEEPER_CONFIG' };
+      return { code: MSPCodes.MSP_SET_BEEPER_CONFIG };
     case MSPCodes.MSP_RESET_CONF:
-      return { code: MSPCodes.MSP_RESET_CONF, name: 'MSP_RESET_CONF' };
+      return { code: MSPCodes.MSP_RESET_CONF };
     case MSPCodes.MSP_SELECT_SETTING:
-      return { code: MSPCodes.MSP_SELECT_SETTING, name: 'MSP_SELECT_SETTING' };
+      return { code: MSPCodes.MSP_SELECT_SETTING };
     case MSPCodes.MSP_SET_SERVO_CONFIGURATION:
-      return { code: MSPCodes.MSP_SET_SERVO_CONFIGURATION, name: 'MSP_SET_SERVO_CONFIGURATION' };
+      return { code: MSPCodes.MSP_SET_SERVO_CONFIGURATION };
     case MSPCodes.MSP_EEPROM_WRITE:
-      return { code: MSPCodes.MSP_EEPROM_WRITE, name: 'MSP_EEPROM_WRITE' };
+      return { code: MSPCodes.MSP_EEPROM_WRITE };
     case MSPCodes.MSP_SET_CURRENT_METER_CONFIG:
-      return { code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG, name: 'MSP_SET_CURRENT_METER_CONFIG' };
+      return { code: MSPCodes.MSP_SET_CURRENT_METER_CONFIG };
     case MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG:
-      return { code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG, name: 'MSP_SET_VOLTAGE_METER_CONFIG' };
+      return { code: MSPCodes.MSP_SET_VOLTAGE_METER_CONFIG };
     case MSPCodes.MSP_SET_MOTOR:
-      return { code: MSPCodes.MSP_SET_MOTOR, name: 'MSP_SET_MOTOR' };
+      return { code: MSPCodes.MSP_SET_MOTOR };
     case MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL:
-      return { code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL, name: 'MSP_SET_VTXTABLE_POWERLEVEL' };
+      return { code: MSPCodes.MSP_SET_VTXTABLE_POWERLEVEL };
     case MSPCodes.MSP_SET_MODE_RANGE:
-      return { code: MSPCodes.MSP_SET_MODE_RANGE, name: 'MSP_SET_MODE_RANGE' };
+      return { code: MSPCodes.MSP_SET_MODE_RANGE };
     case MSPCodes.MSP_SET_ADJUSTMENT_RANGE:
-      return { code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE, name: 'MSP_SET_ADJUSTMENT_RANGE' };
+      return { code: MSPCodes.MSP_SET_ADJUSTMENT_RANGE };
     case MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG:
-      return { code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG, name: 'MSP_SET_BOARD_ALIGNMENT_CONFIG' };
+      return { code: MSPCodes.MSP_SET_BOARD_ALIGNMENT_CONFIG };
     case MSPCodes.MSP_PID_CONTROLLER:
-      return { code: MSPCodes.MSP_PID_CONTROLLER, name: 'MSP_PID_CONTROLLER' };
+      return { code: MSPCodes.MSP_PID_CONTROLLER };
     case MSPCodes.MSP_SET_PID_CONTROLLER:
-      return { code: MSPCodes.MSP_SET_PID_CONTROLLER, name: 'MSP_SET_PID_CONTROLLER' };
+      return { code: MSPCodes.MSP_SET_PID_CONTROLLER };
     case MSPCodes.MSP_SET_LOOP_TIME:
-      return { code: MSPCodes.MSP_SET_LOOP_TIME, name: 'MSP_SET_LOOP_TIME' };
+      return { code: MSPCodes.MSP_SET_LOOP_TIME };
     case MSPCodes.MSP_SET_ARMING_CONFIG:
-      return { code: MSPCodes.MSP_SET_ARMING_CONFIG, name: 'MSP_SET_ARMING_CONFIG' };
+      return { code: MSPCodes.MSP_SET_ARMING_CONFIG };
     case MSPCodes.MSP_SET_RESET_CURR_PID:
-      return { code: MSPCodes.MSP_SET_RESET_CURR_PID, name: 'MSP_SET_RESET_CURR_PID' };
+      return { code: MSPCodes.MSP_SET_RESET_CURR_PID };
     case MSPCodes.MSP_SET_MOTOR_3D_CONFIG:
-      return { code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG, name: 'MSP_SET_MOTOR_3D_CONFIG' };
+      return { code: MSPCodes.MSP_SET_MOTOR_3D_CONFIG };
     case MSPCodes.MSP_SET_MIXER_CONFIG:
-      return { code: MSPCodes.MSP_SET_MIXER_CONFIG, name: 'MSP_SET_MIXER_CONFIG' };
+      return { code: MSPCodes.MSP_SET_MIXER_CONFIG };
     case MSPCodes.MSP_SET_RC_DEADBAND:
-      return { code: MSPCodes.MSP_SET_RC_DEADBAND, name: 'MSP_SET_RC_DEADBAND' };
+      return { code: MSPCodes.MSP_SET_RC_DEADBAND };
     case MSPCodes.MSP_SET_SENSOR_ALIGNMENT:
-      return { code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT, name: 'MSP_SET_SENSOR_ALIGNMENT' };
+      return { code: MSPCodes.MSP_SET_SENSOR_ALIGNMENT };
     case MSPCodes.MSP_SET_RX_CONFIG:
-      return { code: MSPCodes.MSP_SET_RX_CONFIG, name: 'MSP_SET_RX_CONFIG' };
+      return { code: MSPCodes.MSP_SET_RX_CONFIG };
     case MSPCodes.MSP_SET_RXFAIL_CONFIG:
-      return { code: MSPCodes.MSP_SET_RXFAIL_CONFIG, name: 'MSP_SET_RXFAIL_CONFIG' };
+      return { code: MSPCodes.MSP_SET_RXFAIL_CONFIG };
     case MSPCodes.MSP_SET_FAILSAFE_CONFIG:
-      return { code: MSPCodes.MSP_SET_FAILSAFE_CONFIG, name: 'MSP_SET_FAILSAFE_CONFIG' };
+      return { code: MSPCodes.MSP_SET_FAILSAFE_CONFIG };
     case MSPCodes.MSP_SET_NAME:
-      return { code: MSPCodes.MSP_SET_NAME, name: 'MSP_SET_NAME' };
+      return { code: MSPCodes.MSP_SET_NAME };
     case MSPCodes.MSP_API_VERSION:
-      return { code: MSPCodes.MSP_API_VERSION, name: 'MSP_API_VERSION', ...parseApiVersion(data) };
+      return { code: MSPCodes.MSP_API_VERSION, payload: parseApiVersion(data) };
     case MSPCodes.MSP_FC_VARIANT:
-      return { code: MSPCodes.MSP_FC_VARIANT, name: 'MSP_FC_VARIANT', fcVariantIdentifier: parseFcVariant(data) };
+      return { code: MSPCodes.MSP_FC_VARIANT, payload: parseFcVariant(data) };
     case MSPCodes.MSP_FC_VERSION:
-      return { code: MSPCodes.MSP_FC_VERSION, name: 'MSP_FC_VERSION', flightControllerVersion: parseFcVersion(data) };
+      return { code: MSPCodes.MSP_FC_VERSION, payload: parseFcVersion(data) };
     case MSPCodes.MSP_BUILD_INFO:
-      return { code: MSPCodes.MSP_BUILD_INFO, name: 'MSP_BUILD_INFO', buildInfo: parseBuildInfo(data) };
+      return { code: MSPCodes.MSP_BUILD_INFO, payload: parseBuildInfo(data) };
     case MSPCodes.MSP_BOARD_INFO:
-      return { code: MSPCodes.MSP_BOARD_INFO, name: 'MSP_BOARD_INFO', ...parseBoardInfo(data) };
+      return { code: MSPCodes.MSP_BOARD_INFO, payload: parseBoardInfo(data) };
     case MSPCodes.MSP_NAME:
-      return { code: MSPCodes.MSP_NAME, name: 'MSP_NAME', value: parseName(data) };
+      return { code: MSPCodes.MSP_NAME, payload: parseName(data) };
     case MSPCodes.MSP_UID:
-      return { code: MSPCodes.MSP_UID, name: 'MSP_UID', deviceIdentifier: parseUID(data) };
+      return { code: MSPCodes.MSP_UID, payload: parseUID(data) };
     case MSPCodes.MSP2_GET_TEXT:
-      return { code: MSPCodes.MSP2_GET_TEXT, name: 'MSP2_GET_TEXT', ...parseGetText(data) };
+      return { code: MSPCodes.MSP2_GET_TEXT, payload: parseGetText(data) };
     case MSPCodes.MSP2_SET_TEXT:
-      return { code: MSPCodes.MSP2_SET_TEXT, name: 'MSP2_SET_TEXT' };
+      return { code: MSPCodes.MSP2_SET_TEXT };
     case MSPCodes.MSP_BEEPER_CONFIG:
-      return { code: MSPCodes.MSP_BEEPER_CONFIG, name: 'MSP_BEEPER_CONFIG', ...parseBeeperConfig(data) };
+      return { code: MSPCodes.MSP_BEEPER_CONFIG, payload: parseBeeperConfig(data) };
     case MSPCodes.MSP_MODE_RANGES:
-      return { code: MSPCodes.MSP_MODE_RANGES, name: 'MSP_MODE_RANGES', modeRanges: parseModeRanges(data) };
+      return { code: MSPCodes.MSP_MODE_RANGES, payload: parseModeRanges(data) };
     case MSPCodes.MSP_MODE_RANGES_EXTRA:
-      return { code: MSPCodes.MSP_MODE_RANGES_EXTRA, name: 'MSP_MODE_RANGES_EXTRA', modeRangesExtra: parseModeRangesExtra(data) };
+      return { code: MSPCodes.MSP_MODE_RANGES_EXTRA, payload: parseModeRangesExtra(data) };
     case MSPCodes.MSP_MOTOR_3D_CONFIG:
-      return { code: MSPCodes.MSP_MOTOR_3D_CONFIG, name: 'MSP_MOTOR_3D_CONFIG', ...parseMotor3DConfig(data) };
+      return { code: MSPCodes.MSP_MOTOR_3D_CONFIG, payload: parseMotor3DConfig(data) };
     case MSPCodes.MSP_RC_DEADBAND:
-      return { code: MSPCodes.MSP_RC_DEADBAND, name: 'MSP_RC_DEADBAND', ...parseRcDeadbandConfig(data) };
+      return { code: MSPCodes.MSP_RC_DEADBAND, payload: parseRcDeadbandConfig(data) };
     case MSPCodes.MSP_GPS_CONFIG:
-      return { code: MSPCodes.MSP_GPS_CONFIG, name: 'MSP_GPS_CONFIG', ...parseGpsConfig(data) };
+      return { code: MSPCodes.MSP_GPS_CONFIG, payload: parseGpsConfig(data) };
     case MSPCodes.MSP_GPS_RESCUE:
-      return { code: MSPCodes.MSP_GPS_RESCUE, name: 'MSP_GPS_RESCUE', ...parseGpsRescue(data) };
+      return { code: MSPCodes.MSP_GPS_RESCUE, payload: parseGpsRescue(data) };
     case MSPCodes.MSP_GPS_SV_INFO:
-      return { code: MSPCodes.MSP_GPS_SV_INFO, name: 'MSP_GPS_SV_INFO', ...parseGpsSvInfo(data) };
+      return { code: MSPCodes.MSP_GPS_SV_INFO, payload: parseGpsSvInfo(data) };
     case MSPCodes.MSP_VTX_CONFIG:
-      return { code: MSPCodes.MSP_VTX_CONFIG, name: 'MSP_VTX_CONFIG', ...parseVtxConfig(data) };
+      return { code: MSPCodes.MSP_VTX_CONFIG, payload: parseVtxConfig(data) };
     case MSPCodes.MSP_VTXTABLE_BAND:
-      return { code: MSPCodes.MSP_VTXTABLE_BAND, name: 'MSP_VTXTABLE_BAND', ...parseVtxTableBand(data) };
+      return { code: MSPCodes.MSP_VTXTABLE_BAND, payload: parseVtxTableBand(data) };
     case MSPCodes.MSP_VTXTABLE_POWERLEVEL:
-      return { code: MSPCodes.MSP_VTXTABLE_POWERLEVEL, name: 'MSP_VTXTABLE_POWERLEVEL', ...parseVtxTablePowerLevel(data) };
+      return { code: MSPCodes.MSP_VTXTABLE_POWERLEVEL, payload: parseVtxTablePowerLevel(data) };
     case MSPCodes.MSP_LED_COLORS:
-      return { code: MSPCodes.MSP_LED_COLORS, name: 'MSP_LED_COLORS', ledColors: parseLedColors(data) };
+      return { code: MSPCodes.MSP_LED_COLORS, payload: parseLedColors(data) };
     case MSPCodes.MSP_LED_STRIP_MODECOLOR:
-      return {
-        code: MSPCodes.MSP_LED_STRIP_MODECOLOR,
-        name: 'MSP_LED_STRIP_MODECOLOR',
-        ledStripModeColors: parseLedStripModeColor(data),
-      };
+      return { code: MSPCodes.MSP_LED_STRIP_MODECOLOR, payload: parseLedStripModeColor(data) };
     case MSPCodes.MSP_RXFAIL_CONFIG:
-      return { code: MSPCodes.MSP_RXFAIL_CONFIG, name: 'MSP_RXFAIL_CONFIG', rxFailConfig: parseRxFailConfig(data) };
+      return { code: MSPCodes.MSP_RXFAIL_CONFIG, payload: parseRxFailConfig(data) };
     case MSPCodes.MSP_RX_MAP:
-      return { code: MSPCodes.MSP_RX_MAP, name: 'MSP_RX_MAP', ...parseRxMap(data) };
+      return { code: MSPCodes.MSP_RX_MAP, payload: parseRxMap(data) };
     case MSPCodes.MSP_SENSOR_CONFIG:
-      return { code: MSPCodes.MSP_SENSOR_CONFIG, name: 'MSP_SENSOR_CONFIG', ...parseSensorConfig(data) };
+      return { code: MSPCodes.MSP_SENSOR_CONFIG, payload: parseSensorConfig(data) };
     case MSPCodes.MSP_SENSOR_ALIGNMENT:
-      return { code: MSPCodes.MSP_SENSOR_ALIGNMENT, name: 'MSP_SENSOR_ALIGNMENT', ...parseSensorAlignment(data) };
+      return { code: MSPCodes.MSP_SENSOR_ALIGNMENT, payload: parseSensorAlignment(data) };
     case MSPCodes.MSP_PID:
-      return { code: MSPCodes.MSP_PID, name: 'MSP_PID', pids: parsePid(data) };
+      return { code: MSPCodes.MSP_PID, payload: parsePid(data) };
     case MSPCodes.MSP_BLACKBOX_CONFIG:
-      return { code: MSPCodes.MSP_BLACKBOX_CONFIG, name: 'MSP_BLACKBOX_CONFIG', ...parseBlackboxConfig(data) };
+      return { code: MSPCodes.MSP_BLACKBOX_CONFIG, payload: parseBlackboxConfig(data) };
     case MSPCodes.MSP_OSD_CANVAS:
-      return { code: MSPCodes.MSP_OSD_CANVAS, name: 'MSP_OSD_CANVAS', ...parseOsdCanvas(data) };
+      return { code: MSPCodes.MSP_OSD_CANVAS, payload: parseOsdCanvas(data) };
   }
-  throw new Error(`Unknown MSP code: ${code}`);
+  return undefined;
 };
-
-export type MSPMsg = ReturnType<typeof parseMsg>;

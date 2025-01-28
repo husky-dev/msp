@@ -26,7 +26,7 @@ const main = async () => {
   });
 
   const getInfo = async () => {
-    // console.log('api version', await msp.getApiVersion());
+    console.log('api version', await msp.getApiVersion());
     // console.log('fc variant', await msp.getFcVariant());
     // console.log('fc version', await msp.getFcVersion());
     // console.log('board info', await msp.getBoardInfo());
@@ -49,7 +49,7 @@ const main = async () => {
     // console.log('getSensorAlignment', await msp.getSensorAlignment());
     // console.log('getPid', await msp.getPid());
     // console.log('getBlackboxConfig', await msp.getBlackboxConfig());
-    console.log('getOsdCanvas', await msp.getOsdCanvas());
+    // console.log('getOsdCanvas', await msp.getOsdCanvas());
 
     // console.log('getGpsRescue', await msp.getGpsRescue()); // Debug
   };

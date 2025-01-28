@@ -1,3 +1,5 @@
+import { MSPCodes } from './codes';
+
 export const API_VERSION_1_39 = '1.39.0';
 export const API_VERSION_1_40 = '1.40.0';
 
@@ -31,7 +33,7 @@ type MSPDecodeResult =
       error: Error;
     };
 
-export const encodeMessage = (code: number, payload: Buffer = Buffer.from([])) => {
+export const encodeMessage = (code: MSPCodes, payload: Buffer = Buffer.from([])) => {
   return code <= 254 ? encodeMessageV1(code, payload) : encodeMessageV2(code, payload);
 };
 

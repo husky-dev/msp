@@ -10,6 +10,7 @@ import {
   encodeMessage,
   decodeMessage,
 } from './utils';
+import { MSPCodes } from './codes';
 
 /**
  * Encoding and decoding for V1 and V2 messages
@@ -24,7 +25,7 @@ describe('encodeMessage', () => {
   });
 
   it('should encode a V2 message correctly when code is greater than 254', () => {
-    const code = 0x0100;
+    const code: MSPCodes = 0x0100 as MSPCodes;
     const payload = Buffer.from([0x01, 0x02, 0x03]);
     const expected = encodeMessageV2(code, payload);
     expect(encodeMessage(code, payload)).toEqual(expected);
@@ -38,7 +39,7 @@ describe('encodeMessage', () => {
   });
 
   it('should encode a V2 message with no payload correctly', () => {
-    const code = 0x0100;
+    const code = 0x0100 as MSPCodes;
     const payload = Buffer.from([]);
     const expected = encodeMessageV2(code, payload);
     expect(encodeMessage(code, payload)).toEqual(expected);

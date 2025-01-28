@@ -2,60 +2,8 @@ import { EventEmitter } from 'events';
 import { SerialPort } from 'serialport';
 
 import { msp2GetTextCodes, MSPCodes } from './codes';
-import {
-  composeSetName,
-  parseAltitude,
-  parseAnalog,
-  parseApiVersion,
-  parseAttitude,
-  parseBatteryConfig,
-  parseBatteryState,
-  parseBeeperConfig,
-  parseBlackboxConfig,
-  parseBoardInfo,
-  parseBuildInfo,
-  parseCompGPS,
-  parseCurrentMeterConfig,
-  parseCurrentMeters,
-  parseFcVariant,
-  parseFcVersion,
-  parseGetText,
-  parseGpsConfig,
-  parseGpsRescue,
-  parseGpsSvInfo,
-  parseLedColors,
-  parseLedStripModeColor,
-  parseModeRanges,
-  parseModeRangesExtra,
-  parseMotor,
-  parseMotor3DConfig,
-  parseMotorConfig,
-  parseMotorTelemetry,
-  parseMsg,
-  parseName,
-  parseOsdCanvas,
-  parsePid,
-  parseRawGPS,
-  parseRawIMU,
-  parseRC,
-  parseRcDeadbandConfig,
-  parseRxFailConfig,
-  parseRxMap,
-  parseSensorAlignment,
-  parseSensorConfig,
-  parseServo,
-  parseServoConfigurations,
-  parseSonar,
-  parseStatus,
-  parseStatusEx,
-  parseUID,
-  parseVoltageMeterConfig,
-  parseVoltageMeters,
-  parseVtxConfig,
-  parseVtxTableBand,
-  parseVtxTablePowerLevel,
-} from './msg';
-import { BuffDataView, buffToDataView, decodeMessage, encodeMessage, push16 } from './utils';
+import { composeSetName, MSPMsg, parseMsg } from './msg';
+import { decodeMessage, encodeMessage, push16 } from './utils';
 
 interface MultiwiiSerialProtocolOpts {
   path: string;
@@ -63,10 +11,10 @@ interface MultiwiiSerialProtocolOpts {
   timeout?: number;
 }
 
-interface MultiwiiCommandCallback {
-  code: number;
+interface MultiwiiCommandCallback<C = MSPCodes> {
+  code: C;
   timeout: NodeJS.Timeout;
-  resolve: (data: BuffDataView) => void;
+  resolve: (msg: MSPMsg) => void;
   reject: (err: Error) => void;
 }
 
@@ -121,25 +69,25 @@ export class MultiwiiSerialProtocol extends EventEmitter {
     const res = decodeMessage(buff);
     // Process events
     if (!res.success) {
-      this.emit('error', res.error);
-    } else {
-      const msg = parseMsg(res.code, res.payload);
-      if (msg) {
-        this.emit('message', msg);
-      } else {
-        this.emit('error', new Error(`Unsupported message code: ${res.code}`));
-      }
+      return this.emit('error', res.error);
     }
+    const msg = parseMsg(res.code, res.payload);
+    if (msg) {
+      this.emit('message', msg);
+    } else {
+      this.emit('error', new Error(`Unknown message code: ${res.code}`));
+    }
+
     // Process callbacks
     for (let i = this.callbacks.length - 1; i >= 0; i--) {
       const callback = this.callbacks[i];
       if (callback.code === res.code) {
         clearTimeout(callback.timeout);
         this.callbacks.splice(i, 1);
-        if (res.success) {
-          callback.resolve(buffToDataView(res.payload));
+        if (msg) {
+          callback.resolve(msg);
         } else {
-          callback.reject(res.error);
+          callback.reject(new Error(`Unknown message code: ${res.code}`));
         }
       }
     }
@@ -161,13 +109,13 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * Commands
    */
 
-  public async sendMessage(code: number, payload: Buffer = Buffer.from([])) {
+  public async sendMessage(code: MSPCodes, payload: Buffer = Buffer.from([])) {
     if (!this.conencted) {
       throw new Error('Not connected');
     }
     const bufferOut = encodeMessage(code, payload);
     this.port.write(bufferOut);
-    return new Promise<BuffDataView>((resolve, reject) => {
+    return new Promise<MSPMsg>((resolve, reject) => {
       this.callbacks.push({
         code,
         resolve,
@@ -196,7 +144,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getStatus() {
-    return parseStatus(await this.sendMessage(MSPCodes.MSP_STATUS));
+    const resp = await this.sendMessage(MSPCodes.MSP_STATUS);
+    if (resp.code !== MSPCodes.MSP_STATUS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -218,7 +168,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    *  }
    */
   public async getStatusEx() {
-    return parseStatusEx(await this.sendMessage(MSPCodes.MSP_STATUS_EX));
+    const resp = await this.sendMessage(MSPCodes.MSP_STATUS_EX);
+    if (resp.code !== MSPCodes.MSP_STATUS_EX) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -236,7 +188,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getRawIMU() {
-    return parseRawIMU(await this.sendMessage(MSPCodes.MSP_RAW_IMU));
+    const resp = await this.sendMessage(MSPCodes.MSP_RAW_IMU);
+    if (resp.code !== MSPCodes.MSP_RAW_IMU) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -250,7 +204,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * [ 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
    */
   public async getServo() {
-    return parseServo(await this.sendMessage(MSPCodes.MSP_SERVO));
+    const resp = await this.sendMessage(MSPCodes.MSP_SERVO);
+    if (resp.code !== MSPCodes.MSP_SERVO) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SERVO_MIX_RULES
@@ -279,7 +235,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getServoConfigurations() {
-    return parseServoConfigurations(await this.sendMessage(MSPCodes.MSP_SERVO_CONFIGURATIONS));
+    const resp = await this.sendMessage(MSPCodes.MSP_SERVO_CONFIGURATIONS);
+    if (resp.code !== MSPCodes.MSP_SERVO_CONFIGURATIONS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_SERVO_CONFIGURATION
@@ -294,7 +252,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example [ 1000, 1000, 1000, 1000, 0, 0, 0, 0 ]
    */
   public async getMotor() {
-    return parseMotor(await this.sendMessage(MSPCodes.MSP_MOTOR));
+    const resp = await this.sendMessage(MSPCodes.MSP_MOTOR);
+    if (resp.code !== MSPCodes.MSP_MOTOR) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -325,7 +285,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getMotorConfig() {
-    return parseMotorConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_MOTOR_CONFIG);
+    if (resp.code !== MSPCodes.MSP_MOTOR_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_MOTOR_CONFIG
@@ -370,7 +332,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getMotorTelemetry() {
-    return parseMotorTelemetry(await this.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY));
+    const resp = await this.sendMessage(MSPCodes.MSP_MOTOR_TELEMETRY);
+    if (resp.code !== MSPCodes.MSP_MOTOR_TELEMETRY) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP2_MOTOR_OUTPUT_REORDERING
@@ -388,7 +352,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getMotor3DConfig() {
-    return parseMotor3DConfig(await this.sendMessage(MSPCodes.MSP_MOTOR_3D_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_MOTOR_3D_CONFIG);
+    if (resp.code !== MSPCodes.MSP_MOTOR_3D_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_MOTOR_3D_CONFIG
@@ -404,7 +370,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example  [ 1500, 1500, 1500,  885, 1675, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500 ]
    */
   public async getRc() {
-    return parseRC(await this.sendMessage(MSPCodes.MSP_RC));
+    const resp = await this.sendMessage(MSPCodes.MSP_RC);
+    if (resp.code !== MSPCodes.MSP_RC) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_RAW_RC
@@ -424,7 +392,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getRcDeadbandConfig() {
-    return parseRcDeadbandConfig(await this.sendMessage(MSPCodes.MSP_RC_DEADBAND));
+    const resp = await this.sendMessage(MSPCodes.MSP_RC_DEADBAND);
+    if (resp.code !== MSPCodes.MSP_RC_DEADBAND) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_RC_DEADBAND
@@ -448,7 +418,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getRawGPS() {
-    return parseRawGPS(await this.sendMessage(MSPCodes.MSP_RAW_GPS));
+    const resp = await this.sendMessage(MSPCodes.MSP_RAW_GPS);
+    if (resp.code !== MSPCodes.MSP_RAW_GPS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -457,7 +429,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example { distanceToHome: 0, directionToHome: 0, update: 0 }
    */
   public async getCompGPS() {
-    return parseCompGPS(await this.sendMessage(MSPCodes.MSP_COMP_GPS));
+    const resp = await this.sendMessage(MSPCodes.MSP_COMP_GPS);
+    if (resp.code !== MSPCodes.MSP_COMP_GPS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -474,13 +448,17 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getGpsConfig() {
-    return parseGpsConfig(await this.sendMessage(MSPCodes.MSP_GPS_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_GPS_CONFIG);
+    if (resp.code !== MSPCodes.MSP_GPS_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_GPS_CONFIG
 
   public async getGpsRescue() {
-    return parseGpsRescue(await this.sendMessage(MSPCodes.MSP_GPS_RESCUE));
+    const resp = await this.sendMessage(MSPCodes.MSP_GPS_RESCUE);
+    if (resp.code !== MSPCodes.MSP_GPS_RESCUE) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_GPS_RESCUE
@@ -498,7 +476,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getGpsSvInfo() {
-    return parseGpsSvInfo(await this.sendMessage(MSPCodes.MSP_GPS_SV_INFO));
+    const resp = await this.sendMessage(MSPCodes.MSP_GPS_SV_INFO);
+    if (resp.code !== MSPCodes.MSP_GPS_SV_INFO) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -518,7 +498,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example [ 4.1, -0.1, 14.2 ]
    */
   public async getAttitude() {
-    return parseAttitude(await this.sendMessage(MSPCodes.MSP_ATTITUDE));
+    const resp = await this.sendMessage(MSPCodes.MSP_ATTITUDE);
+    if (resp.code !== MSPCodes.MSP_ATTITUDE) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -527,7 +509,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example -0.14
    */
   public async getAltitude() {
-    return parseAltitude(await this.sendMessage(MSPCodes.MSP_ALTITUDE));
+    const resp = await this.sendMessage(MSPCodes.MSP_ALTITUDE);
+    if (resp.code !== MSPCodes.MSP_ALTITUDE) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -536,7 +520,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example 0
    */
   public async getSonar() {
-    return parseSonar(await this.sendMessage(MSPCodes.MSP_SONAR));
+    const resp = await this.sendMessage(MSPCodes.MSP_SONAR);
+    if (resp.code !== MSPCodes.MSP_SONAR) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -551,7 +537,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getAnalog() {
-    return parseAnalog(await this.sendMessage(MSPCodes.MSP_ANALOG));
+    const resp = await this.sendMessage(MSPCodes.MSP_ANALOG);
+    if (resp.code !== MSPCodes.MSP_ANALOG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -572,7 +560,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getVoltageMeters() {
-    return parseVoltageMeters(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METERS));
+    const resp = await this.sendMessage(MSPCodes.MSP_VOLTAGE_METERS);
+    if (resp.code !== MSPCodes.MSP_VOLTAGE_METERS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -584,7 +574,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ];
    */
   public async getVoltageMeterConfig() {
-    return parseVoltageMeterConfig(await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_VOLTAGE_METER_CONFIG);
+    if (resp.code !== MSPCodes.MSP_VOLTAGE_METER_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // MSP_SET_VOLTAGE_METER_CONFIG
@@ -609,7 +601,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getCurrentMeters() {
-    return parseCurrentMeters(await this.sendMessage(MSPCodes.MSP_CURRENT_METERS));
+    const resp = await this.sendMessage(MSPCodes.MSP_CURRENT_METERS);
+    if (resp.code !== MSPCodes.MSP_CURRENT_METERS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -622,7 +616,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getCurrentMeterConfig() {
-    return parseCurrentMeterConfig(await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_CURRENT_METER_CONFIG);
+    if (resp.code !== MSPCodes.MSP_CURRENT_METER_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // MSP_SET_CURRENT_METER_CONFIG
@@ -646,7 +642,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getBatteryState() {
-    return parseBatteryState(await this.sendMessage(MSPCodes.MSP_BATTERY_STATE));
+    const resp = await this.sendMessage(MSPCodes.MSP_BATTERY_STATE);
+    if (resp.code !== MSPCodes.MSP_BATTERY_STATE) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -663,7 +661,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getBatteryConfig() {
-    return parseBatteryConfig(await this.sendMessage(MSPCodes.MSP_BATTERY_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_BATTERY_CONFIG);
+    if (resp.code !== MSPCodes.MSP_BATTERY_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_BATTERY_CONFIG
@@ -678,7 +678,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getApiVersion() {
-    return parseApiVersion(await this.sendMessage(MSPCodes.MSP_API_VERSION));
+    const resp = await this.sendMessage(MSPCodes.MSP_API_VERSION);
+    if (resp.code !== MSPCodes.MSP_API_VERSION) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -687,7 +689,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example 'BTFL'
    */
   public async getFcVariant() {
-    return parseFcVariant(await this.sendMessage(MSPCodes.MSP_FC_VARIANT));
+    const resp = await this.sendMessage(MSPCodes.MSP_FC_VARIANT);
+    if (resp.code !== MSPCodes.MSP_FC_VARIANT) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -696,7 +700,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example '4.4.3'
    */
   public async getFcVersion() {
-    return parseFcVersion(await this.sendMessage(MSPCodes.MSP_FC_VERSION));
+    const resp = await this.sendMessage(MSPCodes.MSP_FC_VERSION);
+    if (resp.code !== MSPCodes.MSP_FC_VERSION) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -705,7 +711,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example 'Nov 18 2023 06:49:34'
    */
   public async getBuildInfo() {
-    return parseBuildInfo(await this.sendMessage(MSPCodes.MSP_BUILD_INFO));
+    const resp = await this.sendMessage(MSPCodes.MSP_BUILD_INFO);
+    if (resp.code !== MSPCodes.MSP_BUILD_INFO) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -730,7 +738,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getBoardInfo() {
-    return parseBoardInfo(await this.sendMessage(MSPCodes.MSP_BOARD_INFO));
+    const resp = await this.sendMessage(MSPCodes.MSP_BOARD_INFO);
+    if (resp.code !== MSPCodes.MSP_BOARD_INFO) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -759,19 +769,25 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getVtxConfig() {
-    return parseVtxConfig(await this.sendMessage(MSPCodes.MSP_VTX_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_VTX_CONFIG);
+    if (resp.code !== MSPCodes.MSP_VTX_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_VTX_CONFIG
 
   public async getVtxTableBand() {
-    return parseVtxTableBand(await this.sendMessage(MSPCodes.MSP_VTXTABLE_BAND));
+    const resp = await this.sendMessage(MSPCodes.MSP_VTXTABLE_BAND);
+    if (resp.code !== MSPCodes.MSP_VTXTABLE_BAND) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_VTXTABLE_BAND
 
   public async getVtxTablePowerLevel() {
-    return parseVtxTablePowerLevel(await this.sendMessage(MSPCodes.MSP_VTXTABLE_POWERLEVEL));
+    const resp = await this.sendMessage(MSPCodes.MSP_VTXTABLE_POWERLEVEL);
+    if (resp.code !== MSPCodes.MSP_VTXTABLE_POWERLEVEL) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_VTXTABLE_POWERLEVEL
@@ -809,7 +825,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getLedColors() {
-    return parseLedColors(await this.sendMessage(MSPCodes.MSP_LED_COLORS));
+    const resp = await this.sendMessage(MSPCodes.MSP_LED_COLORS);
+    if (resp.code !== MSPCodes.MSP_LED_COLORS) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_LED_COLORS
@@ -834,7 +852,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getLedStripModeColor() {
-    return parseLedStripModeColor(await this.sendMessage(MSPCodes.MSP_LED_STRIP_MODECOLOR));
+    const resp = await this.sendMessage(MSPCodes.MSP_LED_STRIP_MODECOLOR);
+    if (resp.code !== MSPCodes.MSP_LED_STRIP_MODECOLOR) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_LED_STRIP_MODECOLOR
@@ -873,7 +893,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getRxFailConfig() {
-    return parseRxFailConfig(await this.sendMessage(MSPCodes.MSP_RXFAIL_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_RXFAIL_CONFIG);
+    if (resp.code !== MSPCodes.MSP_RXFAIL_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_RXFAIL_CONFIG
@@ -887,7 +909,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getRxMap() {
-    return parseRxMap(await this.sendMessage(MSPCodes.MSP_RX_MAP));
+    const resp = await this.sendMessage(MSPCodes.MSP_RX_MAP);
+    if (resp.code !== MSPCodes.MSP_RX_MAP) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_RX_MAP
@@ -898,7 +922,7 @@ export class MultiwiiSerialProtocol extends EventEmitter {
 
   /**
    * Retrieves the sensor data
-   * @see MSP_SENSOR
+   * @see MSP_SENSOR_CONFIG
    * @example
    * {
    *   accHardware: 0,
@@ -907,7 +931,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getSensorConfig() {
-    return parseSensorConfig(await this.sendMessage(MSPCodes.MSP_SENSOR_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_SENSOR_CONFIG);
+    if (resp.code !== MSPCodes.MSP_SENSOR_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_SENSOR_CONFIG
@@ -927,7 +953,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getSensorAlignment() {
-    return parseSensorAlignment(await this.sendMessage(MSPCodes.MSP_SENSOR_ALIGNMENT));
+    const resp = await this.sendMessage(MSPCodes.MSP_SENSOR_ALIGNMENT);
+    if (resp.code !== MSPCodes.MSP_SENSOR_ALIGNMENT) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_SENSOR_ALIGNMENT
@@ -950,7 +978,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getPid() {
-    return parsePid(await this.sendMessage(MSPCodes.MSP_PID));
+    const resp = await this.sendMessage(MSPCodes.MSP_PID);
+    if (resp.code !== MSPCodes.MSP_PID) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_PID
@@ -976,7 +1006,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getBlackboxConfig() {
-    return parseBlackboxConfig(await this.sendMessage(MSPCodes.MSP_BLACKBOX_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_BLACKBOX_CONFIG);
+    if (resp.code !== MSPCodes.MSP_BLACKBOX_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_BLACKBOX_CONFIG
@@ -996,7 +1028,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getOsdCanvas() {
-    return parseOsdCanvas(await this.sendMessage(MSPCodes.MSP_OSD_CANVAS));
+    const resp = await this.sendMessage(MSPCodes.MSP_OSD_CANVAS);
+    if (resp.code !== MSPCodes.MSP_OSD_CANVAS) throw new Error('Invalid response');
+    return resp.payload;
   }
   // TODO: MSP_SET_OSD_CANVAS
 
@@ -1010,10 +1044,11 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * Text
    */
 
-  async getPilotName(): Promise<string> {
-    const data = await this.sendMessage(MSPCodes.MSP2_GET_TEXT, Buffer.from([msp2GetTextCodes.PILOT_NAME]));
-    const { type: textType, value } = parseGetText(data);
-    return textType === msp2GetTextCodes.PILOT_NAME ? value : '';
+  async getPilotName() {
+    const resp = await this.sendMessage(MSPCodes.MSP2_GET_TEXT, Buffer.from([msp2GetTextCodes.PILOT_NAME]));
+    if (resp.code !== MSPCodes.MSP2_GET_TEXT) throw new Error('Invalid response');
+    // const { type: textType, value } = parseGetText(resp.payload);
+    // return textType === msp2GetTextCodes.PILOT_NAME ? value : '';
   }
 
   async setPilotName(name: string): Promise<void> {
@@ -1061,7 +1096,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getModeRanges() {
-    return parseModeRanges(await this.sendMessage(MSPCodes.MSP_MODE_RANGES));
+    const resp = await this.sendMessage(MSPCodes.MSP_MODE_RANGES);
+    if (resp.code !== MSPCodes.MSP_MODE_RANGES) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -1093,7 +1130,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * ]
    */
   public async getModeRangesExtra() {
-    return parseModeRangesExtra(await this.sendMessage(MSPCodes.MSP_MODE_RANGES_EXTRA));
+    const resp = await this.sendMessage(MSPCodes.MSP_MODE_RANGES_EXTRA);
+    if (resp.code !== MSPCodes.MSP_MODE_RANGES_EXTRA) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_MODE_RANGE
@@ -1182,7 +1221,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * }
    */
   public async getBeeperConfig() {
-    return parseBeeperConfig(await this.sendMessage(MSPCodes.MSP_BEEPER_CONFIG));
+    const resp = await this.sendMessage(MSPCodes.MSP_BEEPER_CONFIG);
+    if (resp.code !== MSPCodes.MSP_BEEPER_CONFIG) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   // TODO: MSP_SET_BEEPER_CONFIG
@@ -1195,7 +1236,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example 'SDUA_123456'
    */
   public async getName() {
-    return parseName(await this.sendMessage(MSPCodes.MSP_NAME));
+    const resp = await this.sendMessage(MSPCodes.MSP_NAME);
+    if (resp.code !== MSPCodes.MSP_NAME) throw new Error('Invalid response');
+    return resp.payload;
   }
 
   /**
@@ -1212,7 +1255,9 @@ export class MultiwiiSerialProtocol extends EventEmitter {
    * @example '3009386739576c95837562'
    */
   public async getUid() {
-    return parseUID(await this.sendMessage(MSPCodes.MSP_UID));
+    const resp = await this.sendMessage(MSPCodes.MSP_UID);
+    if (resp.code !== MSPCodes.MSP_UID) throw new Error('Invalid response');
+    return resp.payload;
   }
 }
 
